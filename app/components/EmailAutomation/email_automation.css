@@ -1,0 +1,55 @@
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
+body {
+    padding: 0;
+    margin: 0;
+
+    font-family: 'SF Pro Text', sans-serif;
+}
+
+.email-header {
+    border: 1px solid #d7d7d7;
+}
+
+.email-header .Polaris-Page {
+    width: 100%;
+    max-width: 100%
+}
+
+.email-detail-content {
+    width: 50%;
+    margin: 50px auto;
+}
+
+.status-email-content {
+    padding: 20px 20px;
+}
+
+.status-email {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+.email-support{
+    margin-top: 10px;
+}
+.email-detail-content .Polaris-Card .Polaris-IndexTable .Polaris-IndexTable-ScrollContainer .Polaris-IndexTable__Table thead tr th {
+    text-align: center !important;
+}
+.email-detail-content .Polaris-Card .Polaris-IndexTable .Polaris-IndexTable-ScrollContainer .Polaris-IndexTable__Table tbody tr td {
+    text-align: center !important;
+}
+.resource-item{
+    display: flex;
+        align-items: center;
+    justify-content: space-between;
+
+}
+.resource-item .name-template{
+    font-weight: bold;
+    font-size: 15px;
+    line-height: 20px;
+    min-width: 50%;
+    max-width: 50%;
+
+}

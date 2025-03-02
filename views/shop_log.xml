@@ -1,0 +1,47 @@
+<odoo>
+    <data>
+        <record id='shopify_pdf_shop_log_action' model='ir.actions.act_window'>
+            <field name="name">Shopify PDF Shops Log</field>
+            <field name="res_model">shopify.pdf.shop.log</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <record id="shopify_pdf_shop_log_view_tree" model="ir.ui.view">
+            <field name="name">Shopify PDF Shops Log</field>
+            <field name="model">shopify.pdf.shop.log</field>
+            <field name="arch" type="xml">
+                <tree create='false'>
+                    <field name="name"/>
+                    <field name="created_at"/>
+                </tree>
+            </field>
+        </record>
+        <record id="shopify_shop_view_log_form" model="ir.ui.view">
+            <field name="name">Shopify Shop Log</field>
+            <field name="model">shopify.pdf.shop.log</field>
+            <field name="arch" type="xml">
+                <form create='false'>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="created_at"/>
+                                <field name="log"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="shopify_shop_log_search" model="ir.ui.view">
+            <field name="name">Log Search</field>
+            <field name="model">shopify.pdf.shop.log</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <filter string="Create Date" name="filter_created_date" date="created_at"/>
+                </search>
+            </field>
+        </record>
+        <menuitem id="shopify_pdf_shop_log" name="Shop Log" parent="shopify_pdf_invoice.pdf_base_menu" sequence="2" action="shopify_pdf_shop_log_action"/>
+    </data>
+</odoo>

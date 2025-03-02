@@ -1,0 +1,54 @@
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'SF Pro Text', sans-serif;
+}
+
+.email-header-setting {
+    border: 1px solid #d7d7d7;
+    position: fixed;
+    width: 100%;
+    background: #f6f6f7;
+    z-index: 999;
+    top: 0;
+}
+
+.email-header-setting .Polaris-Page {
+    width: 100%;
+    max-width: 100%
+}
+
+.setting-email-main {
+    width: 50%;
+    margin: 100px auto;
+}
+
+.setting-card-padding {
+    padding: 20px 20px;
+}
+
+.setting-element {
+    padding: 20px 0;
+}
+/*.setting-element  label .Polaris-Choice__Control{*/
+/*    width: 20px;*/
+/*    height: 200px;*/
+/*}*/
+.email-support{
+    margin-top: 10px;
+}
+.help-text {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6D7175;
+}
+#hapo_variables {
+    opacity: 0;
+    position: absolute;
+}
+.Polaris-Stack--spacingTight {
+    margin-bottom: 6px;
+}

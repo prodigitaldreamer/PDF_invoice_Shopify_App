@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_pdf_form_shopify" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.shopify.pdf</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="55"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" string="Shopify PDF"
+                     data-key="shopify_pdf_invoice"
+                     groups="base.group_system">
+                    <h2>Shopify</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box" id="shopify_app">
+
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Shopify App</span>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_app_name" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_app_name"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_api_version" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_api_version"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_api_key" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_api_key"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_api_secret" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_api_secret"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_env" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_env"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <button name="change_script" string="###Update Script Front-End" type="object"/>
+                                    <button name="force_update_scope" string="###Force Update Scope" type="object"/>
+                                    <button name="force_update_webhook" string="###Force Update Webhook" type="object"/>
+                                    <div class="row mt16">
+                                        <label for="pdf_shopify_script_front" class="col-lg-3 o_light_label"/>
+                                        <field name="pdf_shopify_script_front"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" id="sendgrid">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Amazon SES Integration</span>
+                                <div class="text-muted">Email/Domain must be verified on Amazon SES</div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="send_from_email" string="Send From Email" class="col-lg-3 o_light_label"/>
+                                        <field name="send_from_email"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_smtp_user" string="SMTP Username" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_smtp_user"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_smtp_pass" string="SMTP Password" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_smtp_pass"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_smtp_host" string="SMTP Host" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_smtp_host"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="shopify_pdf_smtp_port" string="SMTP Port" class="col-lg-3 o_light_label"/>
+                                        <field name="shopify_pdf_smtp_port"/>
+                                    </div>
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <button name="test_sendgrid_client" type="object" string="##Send a test email" class="btn btn-secondary"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

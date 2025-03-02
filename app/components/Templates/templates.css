@@ -1,0 +1,78 @@
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'SF Pro Text', sans-serif;
+}
+
+.template-header {
+    border: 1px solid #d7d7d7;
+}
+
+.template-header .Polaris-Page {
+    width: 100%;
+    max-width: 100%
+}
+
+.template-list {
+    width: 100%;
+    margin: 50px auto;
+
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+}
+
+.resource-item .name-template {
+    font-weight: bold;
+    font-size: 15px;
+    line-height: 20px;
+    min-width: 50%;
+    max-width: 50%;
+
+}
+
+.resource-item .type-template {
+
+}
+
+.resource-item .status-template {
+
+}
+
+.Polaris-ResourceItem__Disclosure {
+    display: contents;
+    flex: 0 0 var(--pc-resource-item-disclosure-width);
+    justify-content: center;
+    align-items: center;
+}
+
+.Polaris-ResourceItem__Container .Polaris-ButtonGroup {
+    display: none;
+}
+
+.template-empty {
+    text-align: center;
+}
+
+.empty-image svg {
+    margin: 50px 0 30px 0;
+}
+
+.help-text-empty {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6D7175;
+    margin: 20px 24%;
+}
+
+.empty-button {
+    display: flex;
+    justify-content: center;
+}

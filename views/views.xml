@@ -1,0 +1,7 @@
+<odoo>
+    <data>
+        <template id="pdf_js_package_assets" name="PDF JS">
+            <script type="text/javascript" src="/shopify_pdf_invoice/static/src/js/package.js"></script>
+        </template>
+    </data>
+</odoo>

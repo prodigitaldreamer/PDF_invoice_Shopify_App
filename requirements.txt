@@ -1,0 +1,8 @@
+shopifyapi
+cssutils 
+PyPDF2 
+pdfkit 
+premailer 
+currencies 
+pyqrcode 
+sendgrid

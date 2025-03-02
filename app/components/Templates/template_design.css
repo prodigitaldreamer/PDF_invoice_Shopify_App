@@ -1,0 +1,193 @@
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
+body {
+    padding: 0;
+    margin: 0;
+
+    font-family: 'SF Pro Text', sans-serif;
+}
+
+.template-header {
+    border: 1px solid #d7d7d7;
+}
+
+.template-header .Polaris-Page {
+    width: 100%;
+    max-width: 100%
+}
+
+.title-wrapper {
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 28px;
+    /* identical to box height, or 140% */
+    color: #6D7175;
+}
+
+.template-name {
+    color: #000;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.template-detail-content {
+    display: inline-flex;
+}
+
+.template-detail-menu {
+    width: 25vw;
+    min-width: 200px;
+
+}
+
+.template-detail-frame {
+    padding: 1.5rem 0;
+    width: 70vw;
+    height: 100vh;
+    min-width: 350px;
+    min-height: 80%;
+}
+
+.title-option {
+    display: flex;
+}
+
+.title-title {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 20px;
+    margin-left: 20px
+}
+
+.icon-option span {
+    width: 15px;
+    height: 15px;
+    color: rgba(109, 113, 117, 1);
+}
+
+.input-general {
+    padding: 10px 20px
+}
+
+.input-general div div div label {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.design-button {
+    display: flex;
+}
+
+.button-library {
+    margin-left: 8px;
+}
+
+.page-previous {
+    cursor: pointer;
+}
+
+.default-container {
+    margin-top: 0px
+}
+
+.default-content {
+    position: relative;
+    width: 31.3%;
+    margin: 1%;
+    overflow: hidden;
+    border-radius: 3px;
+    text-align: center;
+    float: left;
+}
+
+.default-content .default-content-overlay {
+    background: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    height: 99%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    opacity: 0;
+    -webkit-transition: all 0.4s ease-in-out 0s;
+    -moz-transition: all 0.4s ease-in-out 0s;
+    transition: all 0.4s ease-in-out 0s
+}
+
+.default-content:hover .default-content-overlay {
+    opacity: 1
+}
+
+.default-content-image {
+    width: auto;
+    height: 500px;
+}
+
+.default-content-details {
+    position: absolute;
+    text-align: center;
+    padding-left: 1em;
+    padding-right: 1em;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    -webkit-transition: all 0.3s ease-in-out 0s;
+    -moz-transition: all 0.3s ease-in-out 0s;
+    transition: all 0.3s ease-in-out 0s
+}
+
+.default-content:hover .default-content-details {
+    top: 50%;
+    left: 50%;
+    opacity: 1
+}
+
+.default-content-details h5 {
+    color: #000000;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.5em;
+    text-transform: uppercase
+}
+
+.default-content-details p {
+    color: #fff;
+    font-size: 0.8em
+}
+
+.default-content-title {
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 20px;
+    margin: 20px 0;
+}
+
+.copy-variables {
+    display: flex;
+    justify-content: space-between;
+}
+.Polaris-Listbox-Section__SectionGroup{
+    display: flex;
+    flex-flow: row wrap;
+}
+#hapo_variables {
+    opacity: 0;
+    position: absolute;
+}
+#rpv-default-layout__sidebar-tab-1, #rpv-default-layout__sidebar-tab-2 {
+    display: none;
+}
+.rpv-toolbar__right .rpv-core__display--hidden:nth-child(3), .rpv-toolbar__right .rpv-core__display--hidden:nth-child(4), .rpv-toolbar__right .rpv-core__display--hidden:nth-child(5) {
+    display: none;
+}
+@media screen and (max-width: 940px) {
+    .template-detail-content {display: unset !important;}
+    .template-detail-menu {width: 100%; float: left}
+    .template-detail-frame {width: 100%; float: left}
+}
