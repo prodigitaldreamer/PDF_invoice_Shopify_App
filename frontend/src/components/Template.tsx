@@ -22,7 +22,11 @@ import {
   ViewIcon
 } from '@shopify/polaris-icons';
 
-function TemplateManagement() {
+interface TemplateManagementProps {
+  onEditTemplate?: (id: string) => void;
+}
+
+function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   // PopOver state
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   
@@ -304,6 +308,9 @@ function TemplateManagement() {
   const handleEditTemplate = (id: string) => {
     console.log(`Edit template ${id}`);
     setActivePopoverId(null);
+    if (onEditTemplate) {
+      onEditTemplate(id);
+    }
   };
 
   const handleDuplicateTemplate = (id: string) => {

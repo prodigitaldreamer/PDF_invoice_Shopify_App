@@ -1,16 +1,12 @@
 import React from 'react';
-import { Page,AppProvider } from '@shopify/polaris';
 import TemplateManagement from '../components/Template.tsx';
 
-const TemplateManagementPage: React.FC = () => {
+interface TemplateManagementPageProps {
+  onEditTemplate?: (id: string) => void;
+}
 
-  return (
-    <AppProvider i18n={{}}>
-      <Page>
-          <TemplateManagement/>
-      </Page>
-    </AppProvider>
-
-  );
+const TemplateManagementPage: React.FC<TemplateManagementPageProps> = ({ onEditTemplate }) => {
+  return <TemplateManagement onEditTemplate={onEditTemplate} />;
 };
+
 export default TemplateManagementPage;
