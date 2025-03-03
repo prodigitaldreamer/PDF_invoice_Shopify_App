@@ -13,7 +13,7 @@ import {
     List,
     Layout,
     TextContainer,
-    Scrollable
+  
 } from '@shopify/polaris';
 import {
     DuplicateIcon,
@@ -139,7 +139,7 @@ const SettingsPage: React.FC = () => {
 
     return (
         <Page title="Settings" primaryAction={<Button variant="primary">Save</Button>}>
-             <Scrollable style={{height: '100%'}} focusable>
+    
             <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                 <BlockStack gap="500">
                     {/* Store Information Card */}
@@ -401,7 +401,7 @@ const SettingsPage: React.FC = () => {
                     </Layout>
                 </BlockStack>
             </form>
-            </Scrollable>
+           
         </Page>
     );
 };
