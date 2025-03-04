@@ -41,7 +41,8 @@ class ShopifyHelper:
         return self.shop_model
 
     def auth(self):
-        self.session = ShopifyAuth(self.shop_url, token=self.token, env=self.env)
+        version = self.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_version')
+        self.session = shopify.Session(version=version, token=self.token, shop_url=self.shop_url)
         shopify.ShopifyResource.activate_session(self.session)
         return self.session
 

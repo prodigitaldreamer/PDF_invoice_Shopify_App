@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     Page,
     Card,
@@ -13,12 +13,15 @@ import {
     List,
     Layout,
     TextContainer,
-  
+    Toast,
+    Frame,
 } from '@shopify/polaris';
 import {
     DuplicateIcon,
     InfoIcon,
 } from '@shopify/polaris-icons';
+import axios from 'axios';
+import { ConfigData } from '../types';
 
 interface StoreInformation {
     storeName: string;
@@ -29,6 +32,14 @@ interface StoreInformation {
     city: string;
     postcode: string;
     vatNumber: string;
+    shop: string;
+    allow_backend: boolean;
+    allow_frontend: boolean;
+    download_link_text: string;
+    default_template: string;
+    email_notify_template: string;
+    invoice_start_number: string;
+    front_button_label: string;
 }
 
 interface PrintSettings {
@@ -49,6 +60,12 @@ interface InvoiceNumberSettings {
 }
 
 const SettingsPage: React.FC = () => {
+    // Toast state
+    const [toastActive, setToastActive] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastError, setToastError] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    
     // Store information state
     const [storeInfo, setStoreInfo] = useState<StoreInformation>({
         storeName: '',
@@ -59,8 +76,16 @@ const SettingsPage: React.FC = () => {
         city: '',
         postcode: '',
         vatNumber: '',
+        shop: '',
+        allow_backend: false,
+        allow_frontend: false,
+        download_link_text: '',
+        default_template: '',
+        email_notify_template: '',
+        invoice_start_number: '',
+        front_button_label: '',
     });
-
+    console.log(storeInfo);
     // Print settings state
     const [printSettings, setPrintSettings] = useState<PrintSettings>({
         adminOrderPrintEnabled: false,
@@ -83,6 +108,10 @@ const SettingsPage: React.FC = () => {
 
     // Collapsible state
     const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
+    
+    // Add state to store config data - using the shared ConfigData type
+    const [config, setConfig] = useState<ConfigData | null>(null);
+    const [configLoaded, setConfigLoaded] = useState<boolean>(false);
 
     // Templates for the dropdown
     const templateOptions = [
@@ -90,6 +119,90 @@ const SettingsPage: React.FC = () => {
         { label: 'Minimal Template', value: 'minimal' },
         { label: 'Detailed Template', value: 'detailed' },
     ];
+
+    // Load config data safely with interval check
+    useEffect(() => {
+        // Function to check if config is available
+        const checkForConfig = () => {
+            if (window.config) {
+                setConfig(window.config);
+                setConfigLoaded(true);
+                return true;
+            }
+            return false;
+        };
+        
+        // Try to get config immediately
+        if (!checkForConfig()) {
+            // If not available, set up a listener for when the script might load
+            const configCheckInterval = setInterval(() => {
+                if (checkForConfig()) {
+                    clearInterval(configCheckInterval);
+                }
+            }, 100);
+            
+            // Clean up interval after 5 seconds if config never loads
+            setTimeout(() => {
+                clearInterval(configCheckInterval);
+                if (!configLoaded) {
+                    console.error("Failed to load window.config");
+                    setConfigLoaded(true); // Mark as loaded anyway to prevent waiting indefinitely
+                }
+            }, 5000);
+            
+            return () => {
+                clearInterval(configCheckInterval);
+            };
+        }
+    }, []);
+
+    // Update form states once config is loaded
+    useEffect(() => {
+        if (config?.info) {
+            const info = config.info;
+            
+            // Update store information
+            setStoreInfo({
+                storeName: info.name || '',
+                phoneNumber: info.phone || '',
+                email: info.email || '',
+                address: info.address || '',
+                stateProvince: info.state || '',
+                city: info.city || '',
+                postcode: info.zip || '',
+                vatNumber: info.vat || '',
+                shop: config.shop || '',  
+                allow_backend: info.allow_backend || false,
+                allow_frontend: info.allow_frontend || false,
+                download_link_text: info.download_link_text || '',
+                default_template: info.default_template || '',
+                email_notify_template: info.email_notify_template || '',
+                invoice_start_number: info.invoice_start_number || '',
+                front_button_label: info.front_button_label || '',
+
+            });
+            
+            // Update print settings
+            setPrintSettings({
+                adminOrderPrintEnabled: info.allow_backend || false,
+                customerOrderPrintEnabled: info.allow_frontend || false,
+                printButtonLabel: info.front_button_label || '',
+                defaultTemplate: info.default_template || '',
+            });
+            
+            // Update notification settings
+            setNotificationSettings({
+                defaultEmailTemplate: info.email_notify_template || '',
+                downloadText: info.download_link_text || '',
+                code: '', // This might need to be generated or fetched separately
+            });
+            
+            // Update invoice number settings
+            setInvoiceNumberSettings({
+                firstInvoiceNumber: info.invoice_start_number || '',
+            });
+        }
+    }, [config]);
 
     // Handle store information changes
     const handleStoreInfoChange = useCallback((field: keyof StoreInformation) => (value: string) => {
@@ -128,281 +241,351 @@ const SettingsPage: React.FC = () => {
         setIsInstructionsOpen(prevOpen => !prevOpen);
     }, []);
 
+    // Toast handlers
+    const toggleToast = useCallback((message: string, isError: boolean = false) => {
+        setToastMessage(message);
+        setToastError(isError);
+        setToastActive(true);
+    }, []);
+
+    const handleDismissToast = useCallback(() => setToastActive(false), []);
+
+    // Copy code to clipboard
+    const copyToClipboard = useCallback(() => {
+        navigator.clipboard.writeText(notificationSettings.code);
+        toggleToast('Code copied to clipboard');
+    }, [notificationSettings.code, toggleToast]);
+
     // Handle form submission
-    const handleSubmit = useCallback(() => {
-        console.log('Store Information:', storeInfo);
-        console.log('Print Settings:', printSettings);
-        console.log('Notification Settings:', notificationSettings);
-        console.log('Invoice Number Settings:', invoiceNumberSettings);
-        // Save logic would go here
+    const handleSubmit = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            
+            // Prepare data to match API expectations
+            const data = {
+                shop: storeInfo.shop,
+                name: storeInfo.storeName,
+                phone: storeInfo.phoneNumber,
+                email: storeInfo.email,
+                address: storeInfo.address,
+                state: storeInfo.stateProvince,
+                city: storeInfo.city,
+                zip: storeInfo.postcode,
+                vat: storeInfo.vatNumber,
+                allow_backend: printSettings.adminOrderPrintEnabled,
+                allow_frontend: printSettings.customerOrderPrintEnabled, 
+                front_button_label: printSettings.printButtonLabel,
+                default_template: printSettings.defaultTemplate,
+                email_notify_template: notificationSettings.defaultEmailTemplate,
+                download_link_text: notificationSettings.downloadText,
+                invoice_start_number: invoiceNumberSettings.firstInvoiceNumber,
+
+            };
+            
+            // Call the API to save settings
+            const response = await axios.post('/pdf/save/settings', { data });
+            
+            if (response.data) {
+                toggleToast('Settings saved successfully');
+            } else {
+                toggleToast('Failed to save settings', true);
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            toggleToast('An error occurred while saving settings', true);
+        } finally {
+            setIsLoading(false);
+        }
     }, [storeInfo, printSettings, notificationSettings, invoiceNumberSettings]);
 
+    // Toast component
+    const toastMarkup = toastActive ? (
+        <Toast 
+            content={toastMessage} 
+            onDismiss={handleDismissToast} 
+            error={toastError} 
+            duration={3000}
+        />
+    ) : null;
+
     return (
-        <Page title="Settings" primaryAction={<Button variant="primary">Save</Button>}>
-    
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-                <BlockStack gap="500">
-                    {/* Store Information Card */}
-                    <Layout>
-                        <Layout.AnnotatedSection
-                            title="Fill in your store information"
-                            description="This information will be auto-filled in your PDF invoices when you insert the corresponding variables into your templates"
-                        >
-                            <Card>
-                                <Box paddingBlock="400" paddingInline="500">
-                                    <BlockStack gap="400">
-                                        <TextField
-                                            label="Store Name"
-                                            value={storeInfo.storeName}
-                                            onChange={handleStoreInfoChange('storeName')}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                        />
-                                        <TextField
-                                            label="Phone Number"
-                                            value={storeInfo.phoneNumber}
-                                            onChange={handleStoreInfoChange('phoneNumber')}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                        />
-                                        <TextField
-                                            label="Email"
-                                            value={storeInfo.email}
-                                            onChange={handleStoreInfoChange('email')}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                            type="email"
-                                        />
-                                        <TextField
-                                            label="Address"
-                                            value={storeInfo.address}
-                                            onChange={handleStoreInfoChange('address')}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                        />
+        <Frame>
+            <Page 
+                title="Settings" 
+                primaryAction={
+                    <Button 
+                        variant="primary" 
+                        onClick={handleSubmit}
+                        loading={isLoading}
+                    >
+                        Save
+                    </Button>
+                }
+            >
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                    <BlockStack gap="500">
+                        {/* Store Information Card */}
+                        <Layout>
+                            <Layout.AnnotatedSection
+                                title="Fill in your store information"
+                                description="This information will be auto-filled in your PDF invoices when you insert the corresponding variables into your templates"
+                            >
+                                <Card>
+                                    <Box paddingBlock="400" paddingInline="500">
+                                        <BlockStack gap="400">
+                                            <TextField
+                                                label="Store Name"
+                                                value={storeInfo.storeName}
+                                                onChange={handleStoreInfoChange('storeName')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                            />
+                                            <TextField
+                                                label="Phone Number"
+                                                value={storeInfo.phoneNumber}
+                                                onChange={handleStoreInfoChange('phoneNumber')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                            />
+                                            <TextField
+                                                label="Email"
+                                                value={storeInfo.email}
+                                                onChange={handleStoreInfoChange('email')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                                type="email"
+                                            />
+                                            <TextField
+                                                label="Address"
+                                                value={storeInfo.address}
+                                                onChange={handleStoreInfoChange('address')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                            />
 
-                                        <InlineStack gap="500" wrap={false}>
-                                            <Box width="50%">
-                                                <TextField
-                                                    label="State/Province"
-                                                    value={storeInfo.stateProvince}
-                                                    onChange={handleStoreInfoChange('stateProvince')}
-                                                    placeholder="Value"
-                                                    autoComplete="off"
-                                                />
-                                            </Box>
-                                            <Box width="50%">
-                                                <TextField
-                                                    label="City"
-                                                    value={storeInfo.city}
-                                                    onChange={handleStoreInfoChange('city')}
-                                                    placeholder="Value"
-                                                    autoComplete="off"
-                                                />
-                                            </Box>
-                                        </InlineStack>
+                                            <InlineStack gap="500" wrap={false}>
+                                                <Box width="50%">
+                                                    <TextField
+                                                        label="State/Province"
+                                                        value={storeInfo.stateProvince}
+                                                        onChange={handleStoreInfoChange('stateProvince')}
+                                                        placeholder="Value"
+                                                        autoComplete="off"
+                                                    />
+                                                </Box>
+                                                <Box width="50%">
+                                                    <TextField
+                                                        label="City"
+                                                        value={storeInfo.city}
+                                                        onChange={handleStoreInfoChange('city')}
+                                                        placeholder="Value"
+                                                        autoComplete="off"
+                                                    />
+                                                </Box>
+                                            </InlineStack>
 
-                                        <InlineStack gap="500" wrap={false}>
-                                            <Box width="50%">
-                                                <TextField
-                                                    label="Postcode"
-                                                    value={storeInfo.postcode}
-                                                    onChange={handleStoreInfoChange('postcode')}
-                                                    placeholder="Value"
-                                                    autoComplete="off"
-                                                />
-                                            </Box>
-                                            <Box width="50%">
-                                                <TextField
-                                                    label="VAT number"
-                                                    value={storeInfo.vatNumber}
-                                                    onChange={handleStoreInfoChange('vatNumber')}
-                                                    placeholder="Value"
-                                                    autoComplete="off"
-                                                />
-                                            </Box>
-                                        </InlineStack>
-                                    </BlockStack>
-                                </Box>
-                            </Card>
-                        </Layout.AnnotatedSection>
-                    </Layout>
-
-
-                    {/* Print Settings Card */}
-                    <Layout>
-                        <Layout.Section variant='oneThird'>
-                            <TextContainer>
-                                <Text id="storeDetails" variant="headingMd" as="h2">
-                                    Add a Print Invoice Button to Shopify
-                                </Text>
-                                <Text tone="subdued" as="p">
-                                    This allows you to preview and print invoices on the Shopify admin order page, and your customers can do the same on their order status page.
-                                </Text>
-                            </TextContainer>
-                        </Layout.Section>
-                        <Layout.Section>
-                            <Card>
-                                <BlockStack gap="200">
-                                    <Text as="p" variant="bodyMd">
-                                        Printing on Shopify admin order page is <Text as="span" fontWeight='bold'>{printSettings.adminOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
-                                    </Text>
-                                    <Box>
-                                        <Button
-                                            onClick={() => handlePrintSettingChange('adminOrderPrintEnabled')(!printSettings.adminOrderPrintEnabled)}
-                                        >
-                                            {printSettings.adminOrderPrintEnabled ? 'Disable' : 'Enable'}
-                                        </Button>
+                                            <InlineStack gap="500" wrap={false}>
+                                                <Box width="50%">
+                                                    <TextField
+                                                        label="Postcode"
+                                                        value={storeInfo.postcode}
+                                                        onChange={handleStoreInfoChange('postcode')}
+                                                        placeholder="Value"
+                                                        autoComplete="off"
+                                                    />
+                                                </Box>
+                                                <Box width="50%">
+                                                    <TextField
+                                                        label="VAT number"
+                                                        value={storeInfo.vatNumber}
+                                                        onChange={handleStoreInfoChange('vatNumber')}
+                                                        placeholder="Value"
+                                                        autoComplete="off"
+                                                    />
+                                                </Box>
+                                            </InlineStack>
+                                        </BlockStack>
                                     </Box>
-                                </BlockStack>
-                            </Card>
-                        </Layout.Section>
-                    </Layout>
+                                </Card>
+                            </Layout.AnnotatedSection>
+                        </Layout>
 
-                    <Layout>
-                        <Layout.AnnotatedSection>
-                            <Card>
-                                <BlockStack gap="200">
-                                    <Text as="p" variant="bodyMd">
-                                        Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
+
+                        {/* Print Settings Card */}
+                        <Layout>
+                            <Layout.Section variant='oneThird'>
+                                <TextContainer>
+                                    <Text id="storeDetails" variant="headingMd" as="h2">
+                                        Add a Print Invoice Button to Shopify
                                     </Text>
-                                    <Box>
-                                        <Button
-                                            onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
-                                        >
-                                            {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
-                                        </Button>
-                                    </Box>
-
-                                    <TextField
-                                        label="Print button label"
-                                        value={printSettings.printButtonLabel}
-                                        onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
-                                        placeholder="Value"
-                                        autoComplete="off"
-                                    />
-                                    <Select
-                                        label="Default print invoice template for customer"
-                                        options={templateOptions}
-                                        value={printSettings.defaultTemplate}
-                                        onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
-                                        placeholder="Value"
-                                    />
-                                </BlockStack>
-                            </Card>
-                        </Layout.AnnotatedSection>
-                    </Layout>
-
-                    {/* Notification Settings Card */}
-                    <Layout>
-                        <Layout.AnnotatedSection
-                            title="Insert a download link into the notification email"
-                            description="This allows your customers to download their invoices from the Shopify order email"
-                        >
-                            <Card>
-                                <Box paddingBlock="400" paddingInline="500">
-                                    <BlockStack gap="400">
-                                        <Select
-                                            label="Default template for email notification"
-                                            options={templateOptions}
-                                            value={notificationSettings.defaultEmailTemplate}
-                                            onChange={handleNotificationSettingChange('defaultEmailTemplate')}
-                                            placeholder="Value"
-                                        />
-                                        <TextField
-                                            label="Download text"
-                                            value={notificationSettings.downloadText}
-                                            onChange={handleNotificationSettingChange('downloadText')}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                        />
-                                        <TextField
-                                            label="Code"
-                                            value={notificationSettings.code}
-                                            onChange={handleNotificationSettingChange('code')}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                            prefix={<></>}
-                                            suffix={<Button icon={DuplicateIcon} variant="plain" accessibilityLabel="Copy code" />}
-                                        />
-
-                                    </BlockStack>
-                                </Box>
-                            </Card>
-                        </Layout.AnnotatedSection>
-                    </Layout>
-
-                    <Layout>
-                        <Layout.AnnotatedSection>
-                            <Card>
-                                <Box>
-                                    <Button
-                                        onClick={toggleInstructions}
-                                        icon={InfoIcon}
-                                        variant="plain"
-                                        disclosure={isInstructionsOpen ? 'up' : 'down'}
-                                    >
-                                        How to insert code in Shopify email notification
-                                    </Button>
-                                    <Collapsible
-                                        open={isInstructionsOpen}
-                                        id="how-to-insert-code"
-                                        transition={{ duration: '150ms' }}
-                                    >
-                                        <Box paddingBlockStart="400">
-                                            <BlockStack gap="300">
-                                                <List type="number">
-                                                    <List.Item>Select a template and personalize the download link text for your Shopify email notifications.</List.Item>
-                                                    <List.Item>Copy the provided code</List.Item>
-                                                    <List.Item>Navigate to your Shopify store settings notifications and insert code into your email notification</List.Item>
-                                                </List>
-                                            </BlockStack>
+                                    <Text tone="subdued" as="p">
+                                        This allows you to preview and print invoices on the Shopify admin order page, and your customers can do the same on their order status page.
+                                    </Text>
+                                </TextContainer>
+                            </Layout.Section>
+                            <Layout.Section>
+                                <Card>
+                                    <BlockStack gap="200">
+                                        <Text as="p" variant="bodyMd">
+                                            Printing on Shopify admin order page is <Text as="span" fontWeight='bold'>{printSettings.adminOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
+                                        </Text>
+                                        <Box>
+                                            <Button
+                                                onClick={() => handlePrintSettingChange('adminOrderPrintEnabled')(!printSettings.adminOrderPrintEnabled)}
+                                            >
+                                                {printSettings.adminOrderPrintEnabled ? 'Disable' : 'Enable'}
+                                            </Button>
                                         </Box>
-                                    </Collapsible>
+                                    </BlockStack>
+                                </Card>
+                            </Layout.Section>
+                        </Layout>
 
+                        <Layout>
+                            <Layout.AnnotatedSection>
+                                <Card>
+                                    <BlockStack gap="200">
+                                        <Text as="p" variant="bodyMd">
+                                            Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
+                                        </Text>
+                                        <Box>
+                                            <Button
+                                                onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
+                                            >
+                                                {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
+                                            </Button>
+                                        </Box>
 
-                                </Box>
-                            </Card>
-                        </Layout.AnnotatedSection>
-                    </Layout>
-
-                    {/* Invoice Number Settings Card */}
-                    <Layout>
-                        <Layout.AnnotatedSection
-                            title="Customize invoice number"
-                            description="Use a custom invoice number instead of the default Shopify order number"
-                        >
-                            <Card>
-                                <Box paddingBlock="400" paddingInline="500">
-                                    <BlockStack gap="400">
                                         <TextField
-                                            label="The first invoice number"
-                                            value={invoiceNumberSettings.firstInvoiceNumber}
-                                            onChange={handleInvoiceNumberSettingChange('firstInvoiceNumber')}
+                                            label="Print button label"
+                                            value={printSettings.printButtonLabel}
+                                            onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
                                             placeholder="Value"
                                             autoComplete="off"
                                         />
+                                        <Select
+                                            label="Default print invoice template for customer"
+                                            options={templateOptions}
+                                            value={printSettings.defaultTemplate}
+                                            onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
+                                            placeholder="Value"
+                                        />
+                                    </BlockStack>
+                                </Card>
+                            </Layout.AnnotatedSection>
+                        </Layout>
 
-                                        <BlockStack gap="300">
-                                            <Text as="p" variant="bodyMd">Example: If you set the first invoice number as 003, start counting from the first Shopify order (#1001)</Text>
-                                            <Box paddingInline="500">
-                                                <BlockStack gap="100">
-                                                    <Text as="p" variant="bodyMd">#1001 - #003</Text>
-                                                    <Text as="p" variant="bodyMd">#1002 - #004</Text>
-                                                    <Text as="p" variant="bodyMd">#1003 - #005</Text>
+                        {/* Notification Settings Card */}
+                        <Layout>
+                            <Layout.AnnotatedSection
+                                title="Insert a download link into the notification email"
+                                description="This allows your customers to download their invoices from the Shopify order email"
+                            >
+                                <Card>
+                                    <Box paddingBlock="400" paddingInline="500">
+                                        <BlockStack gap="400">
+                                            <Select
+                                                label="Default template for email notification"
+                                                options={templateOptions}
+                                                value={notificationSettings.defaultEmailTemplate}
+                                                onChange={handleNotificationSettingChange('defaultEmailTemplate')}
+                                                placeholder="Value"
+                                            />
+                                            <TextField
+                                                label="Download text"
+                                                value={notificationSettings.downloadText}
+                                                onChange={handleNotificationSettingChange('downloadText')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                            />
+                                            <TextField
+                                                label="Code"
+                                                value={notificationSettings.code}
+                                                onChange={handleNotificationSettingChange('code')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                                prefix={<></>}
+                                                suffix={<Button icon={DuplicateIcon} variant="plain" accessibilityLabel="Copy code" onClick={copyToClipboard} />}
+                                            />
+
+                                        </BlockStack>
+                                    </Box>
+                                </Card>
+                            </Layout.AnnotatedSection>
+                        </Layout>
+
+                        <Layout>
+                            <Layout.AnnotatedSection>
+                                <Card>
+                                    <Box>
+                                        <Button
+                                            onClick={toggleInstructions}
+                                            icon={InfoIcon}
+                                            variant="plain"
+                                            disclosure={isInstructionsOpen ? 'up' : 'down'}
+                                        >
+                                            How to insert code in Shopify email notification
+                                        </Button>
+                                        <Collapsible
+                                            open={isInstructionsOpen}
+                                            id="how-to-insert-code"
+                                            transition={{ duration: '150ms' }}
+                                        >
+                                            <Box paddingBlockStart="400">
+                                                <BlockStack gap="300">
+                                                    <List type="number">
+                                                        <List.Item>Select a template and personalize the download link text for your Shopify email notifications.</List.Item>
+                                                        <List.Item>Copy the provided code</List.Item>
+                                                        <List.Item>Navigate to your Shopify store settings notifications and insert code into your email notification</List.Item>
+                                                    </List>
                                                 </BlockStack>
                                             </Box>
-                                            <Text as="p" variant="bodyMd">#003 will appear on PDF invoice instead of #1001 if you insert "Custom Invoice Number" variable on your invoice template</Text>
+                                        </Collapsible>
+
+
+                                    </Box>
+                                </Card>
+                            </Layout.AnnotatedSection>
+                        </Layout>
+
+                        {/* Invoice Number Settings Card */}
+                        <Layout>
+                            <Layout.AnnotatedSection
+                                title="Customize invoice number"
+                                description="Use a custom invoice number instead of the default Shopify order number"
+                            >
+                                <Card>
+                                    <Box paddingBlock="400" paddingInline="500">
+                                        <BlockStack gap="400">
+                                            <TextField
+                                                label="The first invoice number"
+                                                value={invoiceNumberSettings.firstInvoiceNumber}
+                                                onChange={handleInvoiceNumberSettingChange('firstInvoiceNumber')}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                            />
+
+                                            <BlockStack gap="300">
+                                                <Text as="p" variant="bodyMd">Example: If you set the first invoice number as 003, start counting from the first Shopify order (#1001)</Text>
+                                                <Box paddingInline="500">
+                                                    <BlockStack gap="100">
+                                                        <Text as="p" variant="bodyMd">#1001 - #003</Text>
+                                                        <Text as="p" variant="bodyMd">#1002 - #004</Text>
+                                                        <Text as="p" variant="bodyMd">#1003 - #005</Text>
+                                                    </BlockStack>
+                                                </Box>
+                                                <Text as="p" variant="bodyMd">#003 will appear on PDF invoice instead of #1001 if you insert "Custom Invoice Number" variable on your invoice template</Text>
+                                            </BlockStack>
                                         </BlockStack>
-                                    </BlockStack>
-                                </Box>
-                            </Card>
-                        </Layout.AnnotatedSection>
-                    </Layout>
-                </BlockStack>
-            </form>
-           
-        </Page>
+                                    </Box>
+                                </Card>
+                            </Layout.AnnotatedSection>
+                        </Layout>
+                    </BlockStack>
+                </form>
+                {toastMarkup}
+            </Page>
+        </Frame>
     );
 };
 

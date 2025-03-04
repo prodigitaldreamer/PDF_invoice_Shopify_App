@@ -11,56 +11,28 @@ import {
   Layout,
   Icon,
 } from '@shopify/polaris';
+import { SkeletonIcon, CheckIcon } from '@shopify/polaris-icons';
+import { ConfigData, Task } from '../types';
 
-import {SkeletonIcon, CheckIcon} from '@shopify/polaris-icons';
-
-// Define TypeScript interface for your config object
-interface ConfigData {
-  // Add properties that you expect in your config object
-  // For example:
-  storeName?: string;
-  apiEndpoint?: string;
-  shopifyData?: any;
-  // Add other properties as needed
-}
-
-// Declare the global window property
-declare global {
-  interface Window {
-    config?: ConfigData;
-  }
-}
-
-interface Task {
-  id: number;
-  title: string;
-  description?: string;
-  completed: boolean;
-  isActive?: boolean;
-  hasSettings?: boolean;
-  expanded?: boolean;
-}
-
-interface HomeSetupProps {
-  storeName?: string;
-}
-export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => {
+export const HomeSetup: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: 1,
       title: "Fill in your store information",
       description: "This information will be auto-filled on invoices",
-      completed: true,
+      completed: false,
       hasSettings: true,
-      expanded: false
+      expanded: false,
+      statusKey: "is_open_setup_info"
     },
     {
       id: 2,
       title: "Add a Print Invoice Button to Shopify",
       description: "This allows you to preview and print invoices on the Shopify admin order page, and your customers can do the same on their order status page",
-      completed: true,
+      completed: false,
       hasSettings: true,
-      expanded: false
+      expanded: false,
+      statusKey: "is_allow_frontend"
     },
     {
       id: 3,
@@ -77,7 +49,7 @@ export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => 
       description: "Customize how invoice numbers are generated and displayed",
       completed: false,
       hasSettings: false,
-      expanded: false  // Explicitly set expanded property
+      expanded: false
     },
     {
       id: 5,
@@ -85,17 +57,14 @@ export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => 
       description: "Personalize the look and feel of your invoice templates",
       completed: false,
       hasSettings: false,
-      expanded: false  // Explicitly set expanded property
+      expanded: false,
+      statusKey: "is_open_template_setting"
     }
   ]);
-
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const progressPercentage = (completedTasks / tasks.length) * 100;
 
   // Add state to store config data
   const [config, setConfig] = useState<ConfigData | null>(null);
   const [configLoaded, setConfigLoaded] = useState<boolean>(false);
-  console.log("Config loaded:", config);
   
   // Use effect to safely access window.config after component mounts
   useEffect(() => {
@@ -133,18 +102,27 @@ export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => 
     }
   }, []);
   
-  // Use config data after it's loaded
+  // Update task completion status based on config data
   useEffect(() => {
-    if (config) {
-      console.log("Config loaded:", config);
-      // Initialize your component with the config data
-      // For example:
-      if (config.storeName) {
-        // Use config.storeName for something
-      }
+    if (config?.info?.setup_status) {
+      const setupStatus = config.info.setup_status;
+      
+      setTasks(prevTasks => 
+        prevTasks.map(task => {
+          if (task.statusKey && setupStatus[task.statusKey] !== undefined) {
+            return {
+              ...task,
+              completed: setupStatus[task.statusKey]
+            };
+          }
+          return task;
+        })
+      );
     }
   }, [config]);
 
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const progressPercentage = (completedTasks / tasks.length) * 100;
   
   const handleSettings = (taskId: number) => {
     console.log(`Opening settings for task ${taskId}`);
@@ -156,7 +134,7 @@ export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => 
     // Implementation for skipping all tasks
   };
 
-  // New handler to toggle expanded state
+  // Handler to toggle expanded state
   const toggleExpand = (taskId: number) => {
     setTasks(prevTasks =>
       prevTasks.map(task =>
@@ -165,8 +143,10 @@ export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => 
     );
   };
 
+  // Get shop name from config, default to "Store" if not available
+  const shopName = config?.info?.shop_name || "Store";
   return (
-    <Page title={`Welcome ${config?.storeName || storeName}`}>
+    <Page title={`Welcome ${shopName}`}>
       <Layout>
         <Layout.Section>
       <Card>
@@ -213,6 +193,7 @@ export const HomeSetup: React.FC<HomeSetupProps> = ({ storeName = "Store" }) => 
                       <Text
                         as="h3"
                         variant="bodyMd"
+                        fontWeight='bold'
                       >
                         {task.title}
                       </Text>

@@ -29,6 +29,7 @@
     "@shopify/polaris": "^13.9.3",
     "@shopify/polaris-icons": "^9.3.0",
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.2.0"

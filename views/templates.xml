@@ -36,24 +36,6 @@
             </body>
         </template>
 
-        <template id="migration_index">
-            &lt;!DOCTYPE html&gt;
-            <head>
-                <title>Migration</title>
-                <meta name="viewport" content="width=device-width"/>
-                <script type="text/javascript">
-                    var odoo =
-                    <t t-out="json.dumps({
-                        'csrf_token': request.csrf_token(None),
-                        '__session_info__': session_info,
-                        'debug': debug,
-                    })"/>;
-                </script>
-            </head>
-            <div id="migration-app"/>
-            <t t-call-assets="shopify_pdf_invoice.pdf_js_package_assets"/>
-        </template>
-
         <template id="exception" name="Reset Button">
             <head>
                 <t t-call-assets="web.assets_common"/>

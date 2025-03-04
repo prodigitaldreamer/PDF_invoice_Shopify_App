@@ -421,7 +421,7 @@ class Main(http.Controller):
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
             shop_model = Shopify.shop_model
-            params = request.params['data']
+            params = json.loads(request.httprequest.data).get('data')
             if shop_model:
                 if 'address' in params:
                     shop_model.shop_address = params['address']

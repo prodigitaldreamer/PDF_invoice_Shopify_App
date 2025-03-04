@@ -7,7 +7,7 @@ const Home: React.FC = () => {
   return (
     <AppProvider i18n={{}}>
       <Page>
-          <HomeSetup storeName="Your Store" />
+          <HomeSetup />
       </Page>
     </AppProvider>
 
