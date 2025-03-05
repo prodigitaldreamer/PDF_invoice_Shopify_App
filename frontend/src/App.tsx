@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppProvider } from '@shopify/polaris';
+import { AppProvider,Link } from '@shopify/polaris';
 import '@shopify/polaris/build/esm/styles.css';
 import Home from './pages/Home.tsx';
 import SettingsPage from './pages/Setting.tsx';
@@ -7,6 +7,7 @@ import {NavMenu} from '@shopify/app-bridge-react';
 import TemplateManagementPage from './pages/SettingTemplate.tsx';
 import TemplateView from './components/TemplateView.tsx';
 import TemplateEdit from './components/TemplateEdit.tsx';
+
 
 const App: React.FC = () => {
     const [path, setPath] = useState(window.location.pathname);
@@ -78,10 +79,10 @@ const App: React.FC = () => {
     };
 
     const renderComponent = () => {
-        if (path === '/shopify/settings') {
+        if (path === '/pdf/settings') {
             return <SettingsPage />;
         }
-        if (path === '/shopify/template/management') {
+        if (path === '/pdf/templates') {
             return <TemplateManagementPage onEditTemplate={(id) => {
                 handleNavigation({ preventDefault: () => {} } as any, '/shopify/template/edit', { id });
             }} />;
@@ -111,9 +112,9 @@ const App: React.FC = () => {
     return (
         <AppProvider i18n={{}}>
             <NavMenu>
-                <a href="/" onClick={(e) => handleNavigation(e, '/')}>Home</a>
-                <a href="/shopify/template/management" onClick={(e) => handleNavigation(e, '/shopify/template/management')}>Template Management</a>
-                <a href="/shopify/settings" onClick={(e) => handleNavigation(e, '/shopify/settings')}>Setting</a>
+                <Link url="/" onClick={() => handleNavigation({ preventDefault: () => {} } as any, '/')}>Home</Link>
+                <Link url="/pdf/templates" onClick={() => handleNavigation({ preventDefault: () => {} } as any, '/pdf/templates')}>Template Management</Link>
+                <Link url="/pdf/settings" onClick={() => handleNavigation({ preventDefault: () => {} } as any, '/pdf/settings')}>Setting</Link>
             </NavMenu>
             {renderComponent()}
         </AppProvider>
