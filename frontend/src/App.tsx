@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppProvider,Link } from '@shopify/polaris';
+import { AppProvider, Link } from '@shopify/polaris';
 import '@shopify/polaris/build/esm/styles.css';
 import Home from './pages/Home.tsx';
 import SettingsPage from './pages/Setting.tsx';
@@ -7,7 +7,6 @@ import {NavMenu} from '@shopify/app-bridge-react';
 import TemplateManagementPage from './pages/SettingTemplate.tsx';
 import TemplateView from './components/TemplateView.tsx';
 import TemplateEdit from './components/TemplateEdit.tsx';
-
 
 const App: React.FC = () => {
     const [path, setPath] = useState(window.location.pathname);
@@ -75,7 +74,7 @@ const App: React.FC = () => {
         console.log("Saving template to API:", { id: templateId, html, design });
         
         // After saving, navigate back to the template view
-        handleNavigation({ preventDefault: () => {} } as any, '/shopify/template/edit', { id: templateId! });
+        handleNavigation({ preventDefault: () => {} } as any, '/pdf/templates/edit', { id: templateId! });
     };
 
     const renderComponent = () => {
@@ -84,10 +83,10 @@ const App: React.FC = () => {
         }
         if (path === '/pdf/templates') {
             return <TemplateManagementPage onEditTemplate={(id) => {
-                handleNavigation({ preventDefault: () => {} } as any, '/shopify/template/edit', { id });
+                handleNavigation({ preventDefault: () => {} } as any, '/pdf/templates/edit', { id });
             }} />;
         }
-        if (path === '/shopify/template/edit' && templateId) {
+        if (path === '/pdf/templates/edit' && templateId) {
             return <TemplateView 
                 templateId={templateId} 
                 onOpenEditor={(html) => handleOpenEditor(templateId, html)}
@@ -100,7 +99,7 @@ const App: React.FC = () => {
                 onSave={handleSaveTemplate}
                 onClose={() => handleNavigation(
                     { preventDefault: () => {} } as any, 
-                    '/shopify/template/edit', 
+                    '/pdf/templates/edit', 
                     { id: templateId }
                 )}
             />;

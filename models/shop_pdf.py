@@ -1261,17 +1261,23 @@ class Shopify(models.Model):
         else:
             return False
 
+    # def remove_style(self, html_str):
+    #     html_str = self.html_format(html_str)
+    #     htmldoc = html.fromstring(html_str)
+    #     out_xml = etree.tostring(htmldoc)
+    #     dom = parseString(out_xml.decode('ascii'))
+    #     style_tag = dom.getElementsByTagName("style")
+    #     if len(style_tag) > 0:
+    #         for tag in style_tag:
+    #             tag.childNodes = []
+    #     html_str = dom.toxml()
+    #     return html_str
     def remove_style(self, html_str):
         html_str = self.html_format(html_str)
-        htmldoc = html.fromstring(html_str)
-        out_xml = etree.tostring(htmldoc)
-        dom = parseString(out_xml.decode('ascii'))
-        style_tag = dom.getElementsByTagName("style")
-        if len(style_tag) > 0:
-            for tag in style_tag:
-                tag.childNodes = []
-        html_str = dom.toxml()
-        return html_str
+        soup = BeautifulSoup(html_str, 'html.parser')
+        for style in soup.find_all('style'):
+            style.clear()  # Xóa nội dung bên trong thẻ <style>
+        return str(soup)
 
     def fill_orders_data(self, html_str=None, data=None):
         html_str = self.html_format(html_str)

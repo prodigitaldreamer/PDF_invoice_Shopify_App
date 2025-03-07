@@ -71,6 +71,7 @@ export const HomeSetup: React.FC = () => {
     // Function to check if config is available
     const checkForConfig = () => {
       if (window.config) {
+        console.log("window.config loaded", );
         setConfig(window.config);
         setConfigLoaded(true);
         return true;
@@ -104,20 +105,49 @@ export const HomeSetup: React.FC = () => {
   
   // Update task completion status based on config data
   useEffect(() => {
-    if (config?.info?.setup_status) {
-      const setupStatus = config.info.setup_status;
+    if (config?.info) {
+      const info = config.info;
       
-      setTasks(prevTasks => 
-        prevTasks.map(task => {
-          if (task.statusKey && setupStatus[task.statusKey] !== undefined) {
-            return {
-              ...task,
-              completed: setupStatus[task.statusKey]
-            };
-          }
-          return task;
-        })
-      );
+      // Create a local copy of tasks to update
+      let updatedTasks = [...tasks];
+      
+      // Task 1: Check if store information is filled
+      if (info.name !== '' || info.phone !== '') {
+        updatedTasks = updatedTasks.map(task => 
+          task.id === 1 ? { ...task, completed: true } : task
+        );
+      }
+      
+      // Task 2: Check if print invoice button is enabled
+      if (info.allow_frontend || info.allow_backend) {
+        updatedTasks = updatedTasks.map(task => 
+          task.id === 2 ? { ...task, completed: true } : task
+        );
+      }
+      
+      // Task 3: Check email notification template (assuming this is the right field)
+      if (info.email_notify_template && info.email_notify_template !== '') {
+        updatedTasks = updatedTasks.map(task => 
+          task.id === 3 ? { ...task, completed: true } : task
+        );
+      }
+      
+      // Task 4: Check invoice numbering
+      if (info.invoice_start_number && info.invoice_start_number !== '') {
+        updatedTasks = updatedTasks.map(task => 
+          task.id === 4 ? { ...task, completed: true } : task
+        );
+      }
+      
+      // Task 5: Check if templates exist
+      if (config.templates && config.templates.length > 0) {
+        updatedTasks = updatedTasks.map(task => 
+          task.id === 5 ? { ...task, completed: true } : task
+        );
+      }
+      
+      // Update state with all changes
+      setTasks(updatedTasks);
     }
   }, [config]);
 

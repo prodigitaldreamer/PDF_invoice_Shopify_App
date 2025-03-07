@@ -531,7 +531,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   const emptyStateMarkup = (
     <EmptyState
       heading="Looks like you have no templates here"
-      image="/shopify_pdf_invoice/static/description/images/empty_templates.svg"
+      image="/shopify_pdf_invoice/static/description/images/box.png"
       action={{
         content: 'Create new template',
         onAction: () => {
@@ -629,12 +629,20 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
               >
                 {sortedTemplates.map((template, index) => {
                   const id = String(template.id);
+                  
+                  // Create row click handler that navigates to edit view
+                  const handleRowClick = () => {
+                    // Navigate to edit template
+                    handleEditTemplate(id);
+                  };
+                  
                   return (
                     <IndexTable.Row 
                       id={id} 
                       key={id} 
                       position={index}
                       selected={selectedResources.includes(id)}
+                      onClick={handleRowClick} // Add row click handler
                     >
                       <IndexTable.Cell>
                         <Text variant="bodyMd" fontWeight="bold" as="span">
@@ -659,44 +667,58 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
                         <Popover
                           active={activePopoverId === id}
                           activator={
-                            <Button 
-                              variant="plain" 
-                              icon={MenuHorizontalIcon} 
-                              onClick={() => togglePopover(id)} 
-                            />
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <Button 
+                                variant="plain" 
+                                icon={MenuHorizontalIcon}
+                                onClick={() => {
+                                  togglePopover(id);
+                                }}
+                              />
+                            </div>
                           }
                           onClose={() => setActivePopoverId(null)}
                           preferredAlignment="right"
                         >
-                          <Popover.Pane>
-                            <ActionList
-                              actionRole="menuitem"
-                              items={[
-                                {
-                                  content: 'Edit',
-                                  icon: EditIcon,
-                                  onAction: () => handleEditTemplate(id),
-                                },
-                                {
-                                  content: 'Duplicate',
-                                  icon: DuplicateIcon,
-                                  onAction: () => handleDuplicateTemplate(id),
-                                },
-                                {
-                                  content: template.default_set ? 'Default' : 'Set as default',
-                                  icon: ViewIcon,
-                                  onAction: () => handleSetAsDefault(id),
-                                  disabled: template.default_set,
-                                },
-                                {
-                                  content: 'Delete',
-                                  icon: DeleteIcon,
-                                  onAction: () => handleDeleteTemplate(id),
-                                  destructive: true,
-                                },
-                              ]}
-                            />
-                          </Popover.Pane>
+                          <div onClick={(e) => e.stopPropagation()}> {/* Add a wrapper div to stop all propagation */}
+                            <Popover.Pane>
+                              <ActionList
+                                actionRole="menuitem"
+                                items={[
+                                  {
+                                    content: 'Edit',
+                                    icon: EditIcon,
+                                    onAction: () => {
+                                      handleEditTemplate(id);
+                                    }
+                                  },
+                                  {
+                                    content: 'Duplicate',
+                                    icon: DuplicateIcon,
+                                    onAction: () => {
+                                      handleDuplicateTemplate(id);
+                                    }
+                                  },
+                                  {
+                                    content: template.default_set ? 'Default' : 'Set as default',
+                                    icon: ViewIcon,
+                                    onAction: () => {
+                                      handleSetAsDefault(id);
+                                    },
+                                    disabled: template.default_set,
+                                  },
+                                  {
+                                    content: 'Delete',
+                                    icon: DeleteIcon,
+                                    onAction: () => {
+                                      handleDeleteTemplate(id);
+                                    },
+                                    destructive: true,
+                                  },
+                                ]}
+                              />
+                            </Popover.Pane>
+                          </div>
                         </Popover>
                       </IndexTable.Cell>
                     </IndexTable.Row>

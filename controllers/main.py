@@ -145,7 +145,6 @@ class Main(http.Controller):
                 p = re.compile('(?<!\\\\)\'')
 
                 if tem:
-
                     template_info.update({
                         'id': str(shop.encode(tem.id)),
                         'name': tem.name,
@@ -304,6 +303,7 @@ class Main(http.Controller):
             if tem:
                 template_info = {}
                 template_info.update({
+                    'name': tem.name,
                     'type': tem.type if tem.type else 'invoice',
                     'html': tem.html if tem.html else '',
                     'json': tem.json if tem.json else '',
