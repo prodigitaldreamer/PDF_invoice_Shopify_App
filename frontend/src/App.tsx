@@ -12,6 +12,7 @@ const App: React.FC = () => {
     const [path, setPath] = useState(window.location.pathname);
     const [templateId, setTemplateId] = useState<string | null>(null);
     const [templateHtml, setTemplateHtml] = useState<string | null>(null);
+    const [templateJson, setTemplateJson] = useState<string | null>(null);
     
     useEffect(() => {
         const handlePopState = () => {
@@ -58,13 +59,15 @@ const App: React.FC = () => {
         // Clear template HTML when navigating
         if (newPath !== '/shopify/template/editor') {
             setTemplateHtml(null);
+            setTemplateJson(null);
         }
     };
     
     // Handle opening the editor with a template
-    const handleOpenEditor = (id: string, html: string) => {
+    const handleOpenEditor = (id: string, html: string, json?: string) => {
         setTemplateId(id);
         setTemplateHtml(html);
+        setTemplateJson(json || null); // Convert undefined to null
         handleNavigation({ preventDefault: () => {} } as any, '/shopify/template/editor', { id });
     };
     
@@ -89,13 +92,14 @@ const App: React.FC = () => {
         if (path === '/pdf/templates/edit' && templateId) {
             return <TemplateView 
                 templateId={templateId} 
-                onOpenEditor={(html) => handleOpenEditor(templateId, html)}
+                onOpenEditor={(html, json) => handleOpenEditor(templateId, html, json)}
             />;
         }
         if (path === '/shopify/template/editor' && templateId) {
             return <TemplateEdit 
                 templateId={templateId}
                 templateHtml={templateHtml || ''}
+                templateJson={templateJson || ''}
                 onSave={handleSaveTemplate}
                 onClose={() => handleNavigation(
                     { preventDefault: () => {} } as any, 

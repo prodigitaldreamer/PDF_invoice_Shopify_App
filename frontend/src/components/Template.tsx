@@ -524,8 +524,6 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
     }
   };
   
-  // Check if live support is available from config
-  const isLiveSupportAvailable = config?.live_support || false;
   
   // Empty state component
   const emptyStateMarkup = (
@@ -557,11 +555,6 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
     appBridge.modal.hide(DELETE_MODAL_ID);
   };
 
-  // Handle request form open
-  const handleOpenRequestForm = () => {
-    appBridge.modal.show(REQUEST_FORM_MODAL_ID);
-  };
-
   return (
     <Frame>
       <Page 
@@ -572,13 +565,6 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
             window.location.pathname = `/pdf/templates/0/edit/${config?.info?.shop || ''}`;
           }
         }}
-        secondaryActions={[
-          {
-            content: 'On-demand customization',
-            onAction: handleOpenRequestForm,
-            disabled: !isLiveSupportAvailable
-          }
-        ]}
       >
         <LegacyCard>
           {templates.length === 0 ? (

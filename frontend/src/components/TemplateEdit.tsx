@@ -6,12 +6,24 @@ import {
   Text,
   Toast,
   Spinner,
-  Modal
+  Modal,
+  Button,
+  TextField,
+  Icon,
+  Scrollable,
+  TextContainer,
+  Box,
+  BlockStack
 } from '@shopify/polaris';
+import { SearchIcon } from '@shopify/polaris-icons';
+
+// Import the variables data (you may need to convert to TypeScript)
+import { data } from '../data/DataVariable';
 
 interface TemplateEditProps {
   templateId?: string;
   templateHtml?: string;
+  templateJson?: string; // Add this
   onSave?: (html: string, design: any) => void;
   onClose?: () => void;
 }
@@ -34,20 +46,22 @@ declare global {
 }
 
 const TemplateEdit: React.FC<TemplateEditProps> = ({ 
-  templateId, 
-  templateHtml = '', 
+  templateHtml = '',
+  templateJson = '', // Add this param
   onSave, 
   onClose 
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEditorLoaded, setIsEditorLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastError, setToastError] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showVariablesModal, setShowVariablesModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredVariables, setFilteredVariables] = useState(data);
   
   // Initial design object - use this to load a template
   const initialDesign = useRef<any>({
@@ -115,11 +129,11 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     }
 
     try {
-      // First initialize the editor
+      // Initialize with full design capabilities
       window.unlayer.init({
         id: 'editor-container', 
         projectId: 267669,
-        displayMode: "email",
+        displayMode: "email", // Can also use "web" if needed
         appearance: {
           theme: 'light',
           panels: {
@@ -128,15 +142,48 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
             }
           }
         },
-        // Using the API key securely through your server is recommended
-        user: {
-          id: "user_" + (templateId || "new"),
-          apiKey: "JPBrsLeyjlaeE1YaNUorAT1LVjcvZpaiShtmZOhfYptBPDYtLlKNCXty7tjX97V6"
-        },
-        designJson: true,
+        // Enable all design tools
         tools: {
-          // You can configure specific tools here
-        }
+          // Make sure all design tools are enabled
+          text: {
+            enabled: true
+          },
+          image: {
+            enabled: true
+          },
+          button: {
+            enabled: true
+          },
+          divider: {
+            enabled: true
+          },
+          spacer: {
+            enabled: true
+          },
+          social: {
+            enabled: true
+          },
+          video: {
+            enabled: true
+          },
+          html: {
+            enabled: true
+          },
+          // Any other tools you want to explicitly enable
+        },
+        editor: {
+          minRows: 1,
+          maxRows: 100
+        },
+        features: {
+          previewDesktop: true,
+          previewMobile: true,
+          stockImages: true,
+          undoRedo: true
+        },
+        designMode: true, // Explicitly enable design mode
+        designTagsText: {},
+        safeHtml: false  // Allow all HTML
       });
 
       // After editor is initialized, load template content
@@ -158,38 +205,111 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     if (!window.unlayer) return;
 
     try {
-      if (templateHtml && templateHtml.trim() !== '') {
+      console.log("Loading template content");
+      
+      if (templateJson && templateJson.trim() !== '') {
+        // First try to use the provided JSON design directly
         try {
-          // First try to parse it as design JSON
-          const design = JSON.parse(templateHtml);
+          const design = JSON.parse(templateJson);
+          console.log("Successfully loaded template from JSON design");
           window.unlayer.loadDesign(design);
+          return;
         } catch (e) {
-          console.log("Not valid JSON, creating a new design with the HTML content");
+          console.log("Invalid JSON design, falling back to HTML", e);
+        }
+      }
+      
+      if (templateHtml && templateHtml.trim() !== '') {
+        // Fall back to HTML if JSON parsing fails or is not available
+        console.log("Loading template content, HTML length:", templateHtml?.length);
+      
+        if (templateHtml && templateHtml.trim() !== '') {
+          // Check if content is likely HTML (starts with HTML tags)
+          const isLikelyHtml = /^\s*(<!DOCTYPE|<html|<div|<body)/i.test(templateHtml);
           
-          // Create a minimal design structure with the HTML content
+          if (!isLikelyHtml) {
+            try {
+              // Try parsing as JSON only if it doesn't look like HTML
+              const design = JSON.parse(templateHtml);
+              console.log("Successfully parsed template as JSON design");
+              window.unlayer.loadDesign(design);
+              return;
+            } catch (e) {
+              console.log("Not valid JSON, will treat as HTML content", e);
+            }
+          }
+          
+          // Handle as HTML content - use HTML block instead of raw HTML content
+          console.log("Creating HTML design structure");
+          
+          // Create a cleaner design structure with the HTML content
           const htmlDesign = {
             body: {
               rows: [
                 {
                   cells: [1],
+                  values: {
+                    backgroundColor: '#ffffff',
+                    columnsBackgroundColor: '#ffffff',
+                    backgroundImage: {},
+                    padding: '0px'
+                  },
                   columns: [
                     {
                       contents: [
                         {
                           type: "html",
                           values: {
-                            html: templateHtml
+                            html: templateHtml,
+                            hideDesktop: false,
+                            hideMobile: false,
+                            contentAlignment: "center"
+                          },
+                          parent: {
+                            type: "column",
+                            content: []
                           }
                         }
-                      ]
+                      ],
+                      values: {
+                        backgroundColor: '#ffffff',
+                        padding: '12px',
+                        border: {},
+                        _meta: {
+                          htmlID: `col-${Date.now()}`,
+                          htmlClassNames: 'container'
+                        }
+                      }
                     }
                   ]
                 }
-              ]
-            }
+              ],
+              values: {
+                backgroundColor: '#ffffff',
+                backgroundImage: {},
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: 'cover',
+                font: {
+                  family: 'Arial',
+                  fallback: 'Helvetica'
+                }
+              }
+            },
+            counters: {
+              u_row: 1,
+              u_column: 1,
+              u_content_html: 1
+            },
+            schemaVersion: 8
           };
           
+          console.log("Loading HTML design structure");
           window.unlayer.loadDesign(htmlDesign);
+        } else {
+          // Load a default template structure
+          console.log("No template content, loading default design");
+          window.unlayer.loadDesign(initialDesign.current);
         }
       } else {
         // Load a default template structure
@@ -197,7 +317,6 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
       }
     } catch (error) {
       console.error("Error loading template content:", error);
-      // If all else fails, load an empty design
       window.unlayer.loadDesign(initialDesign.current);
     }
   };
@@ -209,10 +328,13 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     setIsSaving(true);
     try {
       window.unlayer.exportHtml((data) => {
-        console.log("Saving template:", { html: data.html, design: data.design });
+        console.log("Saving template:", { 
+          html_length: data.html?.length,
+          design: typeof data.design === 'object' ? 'object' : typeof data.design
+        });
         if (onSave) {
-          // Send the design object as a string for storage
-          onSave(data.html, JSON.stringify(data.design));
+          // Send both HTML and the full design object for storage
+          onSave(data.html, data.design);
         }
         setHasUnsavedChanges(false);
         setToastError(false);
@@ -229,42 +351,6 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     }
   };
 
-  // Export the template as HTML
-  const handleExport = () => {
-    if (!window.unlayer) return;
-
-    setIsExporting(true);
-    try {
-      window.unlayer.exportHtml((data) => {
-        // Create a blob and download it
-        const blob = new Blob([data.html], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        
-        // Create a download link and click it
-        const downloadLink = document.createElement('a');
-        downloadLink.href = url;
-        downloadLink.download = `template-${templateId || 'new'}.html`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        
-        // Clean up
-        URL.revokeObjectURL(url);
-        
-        setToastError(false);
-        setToastMessage('Template exported successfully');
-        setShowToast(true);
-      });
-    } catch (error) {
-      console.error("Error exporting template:", error);
-      setToastError(true);
-      setToastMessage('Failed to export template');
-      setShowToast(true);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   // Handle closing the editor
   const handleClose = () => {
     if (hasUnsavedChanges) {
@@ -278,6 +364,45 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
   const confirmExit = () => {
     setShowExitConfirmation(false);
     if (onClose) onClose();
+  };
+
+  // Filter variables when search query changes
+  useEffect(() => {
+    if (searchQuery === '') {
+      setFilteredVariables(data);
+      return;
+    }
+
+    const filterRegex = new RegExp(searchQuery, 'i');
+    const resultOptions = data.map(category => ({
+      title: category.title,
+      options: category.options.filter(item => 
+        item.string.match(filterRegex) !== null
+      )
+    }));
+
+    setFilteredVariables(resultOptions);
+  }, [searchQuery]);
+
+  // Handle variable selection
+  const handleVariableSelect = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setToastError(false);
+      setToastMessage('Variable copied to clipboard');
+      setShowToast(true);
+    } catch (err) {
+      // Fallback for browsers that don't support Clipboard API
+      const textField = document.createElement('textarea');
+      textField.value = value;
+      document.body.appendChild(textField);
+      textField.select();
+      document.execCommand('copy');
+      document.body.removeChild(textField);
+      setToastError(false);
+      setToastMessage('Variable copied to clipboard');
+      setShowToast(true);
+    }
   };
 
   return (
@@ -297,10 +422,9 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
         }}
         secondaryActions={[
           {
-            content: isExporting ? "Exporting..." : "Export HTML",
-            disabled: isExporting || !isEditorLoaded,
-            loading: isExporting,
-            onAction: handleExport
+            content: "Search Variables",
+            disabled: !isEditorLoaded,
+            onAction: () => setShowVariablesModal(true)
           }
         ]}
       >
@@ -335,6 +459,56 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
             }}
           ></div>
         </div>
+
+        {/* Variables Modal */}
+        <Modal
+          open={showVariablesModal}
+          onClose={() => setShowVariablesModal(false)}
+          title="Search Variables"
+          primaryAction={{
+            content: 'Close',
+            onAction: () => setShowVariablesModal(false),
+          }}
+        >
+          <Modal.Section>
+            <TextContainer>
+              <Text as='p'>Search and click on a variable to copy it to clipboard</Text>
+            </TextContainer>
+            
+            <Box paddingBlockEnd="400" paddingBlockStart="200">
+              <TextField
+                label="Search variables"
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Start typing to search..."
+                prefix={<Icon source={SearchIcon} />}
+                autoComplete="off"
+              />
+            </Box>
+            
+            <Scrollable style={{ height: '400px' }}>
+              {filteredVariables.map((category) => (
+                category.options.length > 0 && (
+                  <Box key={category.title} paddingBlockEnd="400">
+                    <Text variant="headingMd" as="h2">{category.title}</Text>
+                    <BlockStack gap="400">
+                      {category.options.map((item) => (
+                        <Button 
+                          key={item.value} 
+                          onClick={() => handleVariableSelect(item.value)}
+                          fullWidth
+                          variant='plain'
+                        >
+                          {item.string}
+                        </Button>
+                      ))}
+                    </BlockStack>
+                  </Box>
+                )
+              ))}
+            </Scrollable>
+          </Modal.Section>
+        </Modal>
 
         {/* Toast notification */}
         {showToast && (

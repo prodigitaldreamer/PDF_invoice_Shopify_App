@@ -21,7 +21,7 @@ import TemplatePreview from './TemplatePreview.tsx';
 
 interface TemplateViewProps {
   templateId?: string;
-  onOpenEditor?: (html: string) => void;
+  onOpenEditor?: (html: string, json?: string) => void;
   onBack?: () => void;
 }
 
@@ -71,7 +71,7 @@ const initialState: TemplateViewState = {
 
 const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, onBack }) => {
   const [state, setState] = useState<TemplateViewState>(initialState);
-
+  
   const updateState = (updates: Partial<TemplateViewState>, withChanges = true) => {
     setState(prev => ({
       ...prev,
@@ -101,7 +101,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
         }
       });
       
-      console.log('Template API response:', response.data);
+      console.log('Template API response:', response);
       
       if (response.data.result.status && response.data.result.template_info) {
         const templateInfo = response.data.result.template_info;
@@ -184,17 +184,16 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
     }
   };
 
-  const handleDiscard = () => {
-    if (state.hasChanges) {
-      updateState({ isLeaveModalOpen: true }, false);
-    } else {
-      if (onBack) {
-        onBack();
-      } else {
-        window.location.href = `/pdf/templates/${window.config?.info?.shop || ''}`;
-      }
+  const handleDiscard = useCallback(() => {
+    // If onBack is provided as a prop, use that
+    if (onBack) {
+      onBack();
+      return;
     }
-  };
+    
+    // Otherwise, directly navigate to templates page
+    window.location.href = '/pdf/templates';
+  }, [onBack]);
 
   const handleDelete = async () => {
     if (!templateId) return;
@@ -229,7 +228,8 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
 
   const handleOpenEditor = () => {
     if (onOpenEditor) {
-      onOpenEditor(state.html);
+      // Pass both HTML and JSON instead of just HTML
+      onOpenEditor(state.html, state.json);
     }
   };
 
@@ -289,7 +289,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
                   label="Type"
                   options={[
                     {label: 'Invoice', value: 'invoice'},
-                    {label: 'Packing Slip', value: 'packing_slip'},
+                    {label: 'Packing Slip', value: 'packing'},
                     {label: 'Refund', value: 'refund'}
                   ]}
                   value={state.type}
