@@ -1280,34 +1280,74 @@ class Shopify(models.Model):
         return str(soup)
 
     def fill_orders_data(self, html_str=None, data=None):
+        if not html_str or not data:
+            return html_str
+        
+        # Format the HTML string
         html_str = self.html_format(html_str)
-        htmldoc = html.fromstring(html_str)
-        out_xml = etree.tostring(htmldoc)
-        dom = parseString(out_xml.decode('ascii'))
-        divs = dom.getElementsByTagName("div")
-        style_tag = dom.getElementsByTagName("style")
-        if len(style_tag) > 0:
-            for tag in style_tag:
-                tag.childNodes = []
-
-        for index in range(len(divs)):
-            if divs[index].getAttribute("class") == 'u-row-container' and self.check_is_row_items_block(divs[index]):
-                clone = divs[index].cloneNode(True)
-                for item in data['items']:
-                    clone_html = clone.toxml()
-                    if item:
-                        for attr in data['items'][item]:
-                            if attr in clone_html:
-                                # Check neu co & trong data thi encode ky tu &
-                                clone_html = clone_html.replace(str(attr),
-                                                                str(data['items'][item][attr]) if '&' not in str(
-                                                                    data['items'][item][attr]) else data['items'][item][
-                                                                    attr].replace('&', Html.escape('&')))
-                        new_div = parseString(clone_html)
-                    divs[index].parentNode.insertBefore(new_div.documentElement, divs[index])
-
-        html_str = dom.toxml()
-        return html_str
+        
+        # Parse HTML with BeautifulSoup
+        soup = BeautifulSoup(html_str, 'html.parser')
+        
+        # Remove styles content (keep the tags)
+        for style_tag in soup.find_all('style'):
+            style_tag.clear()
+        
+        # Find all div elements with class 'u-row-container'
+        item_divs = []
+        for div in soup.find_all('div', class_='u-row-container'):
+            # Check if this div is an items row
+            div_html = str(div)
+            shortcode_count = sum(1 for shortcode in ['{{product_image}}', '{{product_name}}', 
+                                                     '{{sku}}', '{{qty}}', '{{price}}', 
+                                                     '{{subtotal}}'] if shortcode in div_html)
+            if shortcode_count >= 2:
+                item_divs.append(div)
+        
+        # Process each item div
+        for item_div in item_divs:
+            # Get the original div as template
+            template_div = str(item_div)
+            
+            # Create a container for all new divs
+            new_divs = []
+            
+            # For each item, create a new div with replaced content
+            for item_key in data['items']:
+                if not item_key:
+                    continue
+                    
+                new_div_html = template_div
+                for attr, value in data['items'][item_key].items():
+                    # Handle special characters safely
+                    if value is None:
+                        value = '--'
+                    # Convert to string and handle ampersands
+                    safe_value = str(value)
+                    if '&' in safe_value and not safe_value.startswith('<img'):
+                        # Only escape & that aren't already part of HTML entities
+                        safe_value = safe_value.replace('&', '&amp;')
+                        # Fix double-escaped entities
+                        safe_value = safe_value.replace('&amp;amp;', '&amp;')
+                        safe_value = safe_value.replace('&amp;lt;', '&lt;')
+                        safe_value = safe_value.replace('&amp;gt;', '&gt;')
+                        
+                    # Replace the attribute in HTML
+                    new_div_html = new_div_html.replace(attr, safe_value)
+                
+                # Parse the new div HTML
+                new_div_soup = BeautifulSoup(new_div_html, 'html.parser')
+                # Get the top-level div
+                new_div = new_div_soup.div
+                if new_div:
+                    new_divs.append(new_div)
+            
+            # Insert all new divs before the template div
+            for new_div in new_divs:
+                item_div.insert_before(new_div)
+                
+        # Return the modified HTML
+        return str(soup)
 
     def html_well_format(self, html=None):
         html = "<root>" + html + "</root>"

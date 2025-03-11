@@ -532,34 +532,6 @@ const SettingsPage: React.FC = () => {
                                 <Card>
                                     <Box paddingBlock="400" paddingInline="500">
                                         <BlockStack gap="400">
-                                            {/* Collapsible instruction section */}
-                                            <Button
-                                                onClick={toggleInstructions}
-                                                icon={InfoIcon}
-                                                variant="plain"
-                                                disclosure={isInstructionsOpen ? 'up' : 'down'}
-                                            >
-                                                Insert code in Shopify email notification
-                                            </Button>
-                                            <Collapsible
-                                                open={isInstructionsOpen}
-                                                id="how-to-insert-code"
-                                                transition={{ duration: '150ms' }}
-                                            >
-                                                <Box paddingBlockStart="400">
-                                                    <BlockStack gap="300">
-                                                        <List type="number">
-                                                            <List.Item>Choose your template and customize download link text for Shopify email notification</List.Item>
-                                                            <List.Item>Go to your Shopify store settings Notifications</List.Item>
-                                                            <List.Item>Copy code and insert it in your email notification</List.Item>
-                                                        </List>
-                                                        <Text as="p" variant="bodyMd">
-                                                            Need more help? Contact us at <a href="mailto:support@hapoapps.com" target="_blank" rel="noopener noreferrer">support@hapoapps.com</a>
-                                                        </Text>
-                                                    </BlockStack>
-                                                </Box>
-                                            </Collapsible>
-
                                             <Select
                                                 label="Default PDF template for email notification"
                                                 options={templateOptions}
@@ -589,7 +561,6 @@ const SettingsPage: React.FC = () => {
                                             <Button
                                                 variant="primary" 
                                                 onClick={() => window.open('https://admin.shopify.com/store/pdf-trest/email_templates/order_invoice/preview', '_blank')}
-                                                fullWidth
                                             >
                                                 Edit Order Notification in Shopify
                                             </Button>

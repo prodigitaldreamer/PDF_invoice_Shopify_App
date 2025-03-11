@@ -20,7 +20,6 @@
                     gtag('config', 'G-C85BNFY4F4');
                 </script>
                <link rel="stylesheet" href="/shopify_pdf_invoice/static/css/polaris-style.css"/>
-               <!-- <link rel="stylesheet" href="/shopify_pdf_invoice/static/css/polaris-style-custom.css"/> -->
                 <meta name="shopify-api-key" content="b532f4655dbba6b411aa1b704520ed69"/>
                 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
                 <!-- <script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="0a35dc9d-32c4-43e8-b3a1-d927b0b87126";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script> -->
@@ -80,10 +79,14 @@
                 </div>
             </body>
         </template>
+
         <template id="preview" name="Shopify PDF Preview">
             <head>
                 <title>Drag and Drop PDF Invoice</title>
                 <link rel="shortcut icon" sizes="196x196" href="/shopify_pdf_invoice/static/description/Logo.png"/>
+                <link rel="stylesheet" href="/shopify_pdf_invoice/static/css/polaris-style.css"/>
+                <meta name="shopify-api-key" content="b532f4655dbba6b411aa1b704520ed69"/>
+                <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
             </head>
             <body>
                 <div id="pdf_invoice_preview"></div>
@@ -105,6 +108,7 @@
                 <t t-call-assets="shopify_pdf_invoice.pdf_js_package_assets"/>
             </body>
         </template>
+
         <template id="empty_state" name="Shopify PDF Empty">
             <head>
                 <t t-call-assets="web.assets_common"/>
