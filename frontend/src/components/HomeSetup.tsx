@@ -159,11 +159,6 @@ export const HomeSetup: React.FC = () => {
     // Implementation for opening settings
   };
 
-  const handleSkipAll = () => {
-    console.log('Skip all tasks');
-    // Implementation for skipping all tasks
-  };
-
   // Handler to toggle expanded state
   const toggleExpand = (taskId: number) => {
     setTasks(prevTasks =>
@@ -195,11 +190,6 @@ export const HomeSetup: React.FC = () => {
                 <div style={{ flex: 1 }}>
                   <ProgressBar size='small' progress={progressPercentage} />
                 </div>
-                <Button
-                  onClick={handleSkipAll}
-                >
-                  Skip all
-                </Button>
               </InlineStack>
             </div>
           </Box>

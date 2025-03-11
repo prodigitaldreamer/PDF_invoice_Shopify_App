@@ -13,6 +13,8 @@ const App: React.FC = () => {
     const [templateId, setTemplateId] = useState<string | null>(null);
     const [templateHtml, setTemplateHtml] = useState<string | null>(null);
     const [templateJson, setTemplateJson] = useState<string | null>(null);
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [templateInfo, setTemplateInfo] = useState<any>(null);
     
     useEffect(() => {
         const handlePopState = () => {
@@ -20,6 +22,8 @@ const App: React.FC = () => {
             // Extract template ID from URL if present
             const urlParams = new URLSearchParams(window.location.search);
             setTemplateId(urlParams.get('id'));
+            // Close editor when URL changes via browser navigation
+            setIsEditorOpen(false);
         };
 
         window.addEventListener('popstate', handlePopState);
@@ -33,8 +37,7 @@ const App: React.FC = () => {
         };
     }, []);
 
-    const handleNavigation = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, newPath: string, params?: Record<string, string>) => {
-        event.preventDefault();
+    const handleNavigation = ( newPath: string, params?: Record<string, string>) => {
         let url = newPath;
         
         // Add query parameters if provided
@@ -56,19 +59,28 @@ const App: React.FC = () => {
             setTemplateId(null);
         }
         
-        // Clear template HTML when navigating
-        if (newPath !== '/shopify/template/editor') {
+        // Close editor when navigating
+        setIsEditorOpen(false);
+        
+        // Clear template data when navigating away
+        if (newPath !== '/pdf/templates/edit') {
             setTemplateHtml(null);
             setTemplateJson(null);
+            setTemplateInfo(null);
         }
     };
     
     // Handle opening the editor with a template
-    const handleOpenEditor = (id: string, html: string, json?: string) => {
-        setTemplateId(id);
+    const handleOpenEditor = (html: string, json?: string, info?: any) => {
         setTemplateHtml(html);
-        setTemplateJson(json || null); // Convert undefined to null
-        handleNavigation({ preventDefault: () => {} } as any, '/shopify/template/editor', { id });
+        setTemplateJson(json || null);
+        setTemplateInfo(info || null);
+        setIsEditorOpen(true);
+    };
+    
+    // Handle closing the editor
+    const handleCloseEditor = () => {
+        setIsEditorOpen(false);
     };
     
     // Handle saving template from the editor
@@ -76,8 +88,8 @@ const App: React.FC = () => {
         // Here you would normally save to your API
         console.log("Saving template to API:", { id: templateId, html, design });
         
-        // After saving, navigate back to the template view
-        handleNavigation({ preventDefault: () => {} } as any, '/pdf/templates/edit', { id: templateId! });
+        // After saving, close the editor and return to the template view
+        setIsEditorOpen(false);
     };
 
     const renderComponent = () => {
@@ -86,26 +98,26 @@ const App: React.FC = () => {
         }
         if (path === '/pdf/templates') {
             return <TemplateManagementPage onEditTemplate={(id) => {
-                handleNavigation({ preventDefault: () => {} } as any, '/pdf/templates/edit', { id });
+                handleNavigation('/pdf/templates/edit', { id });
             }} />;
         }
         if (path === '/pdf/templates/edit' && templateId) {
+            // If editor is open, render the TemplateEdit component instead of TemplateView
+            if (isEditorOpen) {
+                return <TemplateEdit 
+                    templateId={templateId}
+                    templateHtml={templateHtml || ''}
+                    templateJson={templateJson || ''}
+                    templateInfo={templateInfo}
+                    onSave={handleSaveTemplate}
+                    onClose={handleCloseEditor}
+                />;
+            }
+            
+            // Otherwise render the TemplateView component
             return <TemplateView 
                 templateId={templateId} 
-                onOpenEditor={(html, json) => handleOpenEditor(templateId, html, json)}
-            />;
-        }
-        if (path === '/shopify/template/editor' && templateId) {
-            return <TemplateEdit 
-                templateId={templateId}
-                templateHtml={templateHtml || ''}
-                templateJson={templateJson || ''}
-                onSave={handleSaveTemplate}
-                onClose={() => handleNavigation(
-                    { preventDefault: () => {} } as any, 
-                    '/pdf/templates/edit', 
-                    { id: templateId }
-                )}
+                onOpenEditor={handleOpenEditor}
             />;
         }
         
@@ -115,9 +127,9 @@ const App: React.FC = () => {
     return (
         <AppProvider i18n={{}}>
             <NavMenu>
-                <Link url="/" onClick={() => handleNavigation({ preventDefault: () => {} } as any, '/')}>Home</Link>
-                <Link url="/pdf/templates" onClick={() => handleNavigation({ preventDefault: () => {} } as any, '/pdf/templates')}>Template Management</Link>
-                <Link url="/pdf/settings" onClick={() => handleNavigation({ preventDefault: () => {} } as any, '/pdf/settings')}>Setting</Link>
+                <Link url="/" onClick={() => handleNavigation('/')}>Home</Link>
+                <Link url="/pdf/templates" onClick={() => handleNavigation('/pdf/templates')}>Template Management</Link>
+                <Link url="/pdf/settings" onClick={() => handleNavigation('/pdf/settings')}>Setting</Link>
             </NavMenu>
             {renderComponent()}
         </AppProvider>

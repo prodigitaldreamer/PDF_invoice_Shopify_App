@@ -507,7 +507,13 @@ const SettingsPage: React.FC = () => {
                                                 prefix={<></>}
                                                 suffix={<Button icon={DuplicateIcon} variant="plain" accessibilityLabel="Copy code" onClick={copyToClipboard} />}
                                             />
-
+                                            <Button
+                                                variant="primary" 
+                                                onClick={() => window.open('https://admin.shopify.com/store/pdf-trest/email_templates/order_invoice/preview', '_blank')}
+                                                fullWidth
+                                            >
+                                                Edit Order Notification in Shopify
+                                            </Button>
                                         </BlockStack>
                                     </Box>
                                 </Card>

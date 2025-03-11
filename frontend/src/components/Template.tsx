@@ -562,7 +562,13 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
         primaryAction={{
           content: 'New template',
           onAction: () => {
-            window.location.pathname = `/pdf/templates/0/edit/${config?.info?.shop || ''}`;
+            // Use the same navigation approach as edit template
+            if (onEditTemplate) {
+              onEditTemplate("0"); // Use "0" to indicate new template
+            } else {
+              // Only fall back to direct URL navigation if the prop isn't available
+              window.location.pathname = `/pdf/templates/0/edit/${config?.info?.shop || ''}`;
+            }
           }
         }}
       >

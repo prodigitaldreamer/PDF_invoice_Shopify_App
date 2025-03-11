@@ -297,12 +297,31 @@ class Main(http.Controller):
         try:
             ensure_login()
             shop = request.env['shopify.pdf.shop'].sudo().search([('name', '=', request.session['shop_url_pdf'])])
-            id = shop.decode(int(id))
-            tem = request.env['shopify.pdf.shop.template'].sudo().search(
-                [('id', '=', id), ('shop_id', '=', shop.id)], limit=1)
-            if tem:
-                template_info = {}
+            template_info = {}
+            if id == 0:
                 template_info.update({
+                    'font_family': '',
+                    'font_size': '16.0',
+                    'top_margin': '16.0',
+                    'bottom_margin': '16.0',
+                    'left_margin': '16.0',
+                    'right_margin': '16.0',
+                    'page_size': 'a4',
+                    'embed': '/pdf/invoice/' + str(0) + '/preview/load',
+                    'embed_clipboard': '/pdf/invoice/' + str(0) + '/preview/clipboard',
+                    'name': 'Untitled template',
+                    'type': 'invoice',
+                    'html': '',
+                    'json': '',
+                    'date_format': '%d/%m/%y',
+                    'orientation': 'portrait',
+                })
+            else:
+                id = shop.decode(int(id))
+                tem = request.env['shopify.pdf.shop.template'].sudo().search(
+                    [('id', '=', id), ('shop_id', '=', shop.id)], limit=1)
+                if tem:
+                    template_info.update({
                     'name': tem.name,
                     'type': tem.type if tem.type else 'invoice',
                     'html': tem.html if tem.html else '',
@@ -316,19 +335,20 @@ class Main(http.Controller):
                     'left_margin': str(tem.left_margin) if isinstance(tem.left_margin, float) else '16.0',
                     'right_margin': str(tem.right_margin) if isinstance(tem.right_margin, float) else '16.0',
                     'date_format': tem.date_format if tem.date_format else '%d/%m/%y',
-                    'embed': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/load',
-                    'embed_clipboard': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/clipboard',
+                    'embed': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/load?shop=' + shop.display_name,
+                    'embed_clipboard': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/clipboard?shop=' + shop.display_name,
+                    'default': tem.default if tem.default else False,
                 })
-                return {
-                    'status': True,
-                    'template_info': template_info,
-                }
+            return {
+                'status': True,
+                'template_info': template_info,
+            }
         except:
             self.create_shop_log(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
-        return {
-            'status': False
-        }
+            return {
+                'status': False
+            }
 
     @http.route('/pdf/settings', type='http', auth='public', save_session=False)
     def settings(self):

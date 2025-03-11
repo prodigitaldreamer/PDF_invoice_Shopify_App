@@ -15,13 +15,14 @@ import {
   Spinner,
   Banner,
   Text,
+  Checkbox
 } from '@shopify/polaris';
 import axios from 'axios';
 import TemplatePreview from './TemplatePreview.tsx';
 
 interface TemplateViewProps {
   templateId?: string;
-  onOpenEditor?: (html: string, json?: string) => void;
+  onOpenEditor?: (html: string, json?: string, templateInfo?: TemplateViewState) => void;
   onBack?: () => void;
 }
 
@@ -105,12 +106,6 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
       
       if (response.data.result.status && response.data.result.template_info) {
         const templateInfo = response.data.result.template_info;
-        console.log('Template info:', templateInfo);
-        // Log the extracted template info for debugging
-        console.log('Template info extracted:', {
-          name: templateInfo.name,
-          type: templateInfo.type
-        });
         
         updateState({
           id: templateId,
@@ -158,28 +153,54 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
   const handleSave = async () => {
     try {
       updateState({ isLoading: true, error: null }, false);
-      const response = await axios.post('/pdf/template/update/edit', {
+      
+      // Format data explicitly like in TemplateEdit.tsx
+      const templateData = {
+        id: templateId || '',
+        name: state.name || 'Untitled template',
+        type: state.type || 'invoice',
+        html: state.html || '',
+        json: state.json || '',
+        page_size: state.page_size || 'a4',
+        orientation: state.orientation || 'portrait',
+        font_size: state.font_size || '16.0',
+        font_family: state.font_family || '',
+        top_margin: state.top_margin || '16.0',
+        bottom_margin: state.bottom_margin || '16.0',
+        left_margin: state.left_margin || '16.0',
+        right_margin: state.right_margin || '16.0',
+        date_format: state.date_format || '%d/%m/%y',
+        default: state.default || false
+      };
+      
+      // Determine the correct API endpoint type based on whether we're editing or creating
+      const apiType = templateId ? 'edit' : '';
+      
+      const response = await axios.post(`/pdf/template/update/${apiType}`, {
         data: {
-          info: {
-            ...state,
-            id: templateId,
-            shop: window.config?.info?.shop
-          }
+          info: templateData,
+          shop: window.config?.info?.shop
+        }
+      }, {
+        onUploadProgress: () => {
+          updateState({ isLoading: true }, false);
         }
       });
 
-      if (response.data.status) {
-        showToast('Template saved successfully');
-        await loadTemplateData();
-      } else {
-        updateState({ error: 'Failed to save template' }, false);
-        showToast('Failed to save template', true);
-      }
+      setTimeout(() => {
+        if (response.data.result.status) {
+          showToast('Template saved successfully');
+          loadTemplateData();
+        } else {
+          updateState({ error: 'Failed to save template' }, false);
+          showToast('Failed to save template', true);
+        }
+        updateState({ isLoading: false }, false);
+      }, 1000);
     } catch (error) {
       console.error('Error saving template:', error);
       updateState({ error: 'Error saving template' }, false);
       showToast('Error saving template', true);
-    } finally {
       updateState({ isLoading: false }, false);
     }
   };
@@ -228,8 +249,8 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
 
   const handleOpenEditor = () => {
     if (onOpenEditor) {
-      // Pass both HTML and JSON instead of just HTML
-      onOpenEditor(state.html, state.json);
+      // Pass HTML, JSON, and the complete template info
+      onOpenEditor(state.html, state.json, state);
     }
   };
 
@@ -274,39 +295,13 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
         }}
       >
         <Grid>
-          <Grid.Cell columnSpan={{xs: 6, sm: 3, md: 3, lg: 4, xl: 4}}>
-            <LegacyCard title="General" sectioned>
-              <FormLayout>
-                <TextField
-                  label="Template Name"
-                  placeholder="Enter template name"
-                  autoComplete="off"
-                  value={state.name}
-                  onChange={(value) => updateState({ name: value })}
-                  disabled={state.isLoading}
-                />
-                <Select
-                  label="Type"
-                  options={[
-                    {label: 'Invoice', value: 'invoice'},
-                    {label: 'Packing Slip', value: 'packing'},
-                    {label: 'Refund', value: 'refund'}
-                  ]}
-                  value={state.type}
-                  onChange={(value) => updateState({ type: value as TemplateViewState['type'] })}
-                  disabled={state.isLoading}
-                />
-              </FormLayout>
-            </LegacyCard>
-          </Grid.Cell>
 
-          <Grid.Cell columnSpan={{xs: 6, sm: 3, md: 3, lg: 8, xl: 8}}>
+        <Grid.Cell columnSpan={{xs: 6, sm: 3, md: 3, lg: 8, xl: 8}}>
             <LegacyCard title="Preview">
               <Box background="bg-surface-secondary">
                 <Box padding="400">
                   <div style={{ 
                     minHeight: '80vh',
-                    width: '100%',
                     backgroundColor: 'var(--p-surface)',
                     borderRadius: 'var(--p-border-radius-200)',
                     overflow: 'hidden',
@@ -331,6 +326,38 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
               </Box>
             </LegacyCard>
           </Grid.Cell>
+          <Grid.Cell columnSpan={{xs: 6, sm: 3, md: 3, lg: 4, xl: 4}}>
+            <LegacyCard title="General" sectioned>
+              <FormLayout>
+                <TextField
+                  label="Template Name"
+                  placeholder="Enter template name"
+                  autoComplete="off"
+                  value={state.name}
+                  onChange={(value) => updateState({ name: value })}
+                  disabled={state.isLoading}
+                />
+                <Select
+                  label="Type"
+                  options={[
+                    {label: 'Invoice', value: 'invoice'},
+                    {label: 'Packing Slip', value: 'packing'},
+                    {label: 'Refund', value: 'refund'}
+                  ]}
+                  value={state.type}
+                  onChange={(value) => updateState({ type: value as TemplateViewState['type'] })}
+                  disabled={state.isLoading}
+                />
+                <Checkbox
+                  label="Set as default template for this type"
+                  checked={state.default || false}
+                  onChange={(value) => updateState({ default: value })}
+                  disabled={state.isLoading}
+                />
+              </FormLayout>
+            </LegacyCard>
+          </Grid.Cell>
+
         </Grid>
         
         <Box paddingBlockStart="400" paddingBlockEnd="400">

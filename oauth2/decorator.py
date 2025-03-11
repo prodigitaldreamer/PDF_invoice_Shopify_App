@@ -31,8 +31,10 @@ def is_shop_login(check_access=False, check_force=True):
     data = json.loads(request.httprequest.data).get('data') if request.httprequest.data else {}
     if is_shop_login and 'shop' in data:
         is_shop_login = is_shop_login and data['shop'] == request.session['shop_url_pdf']
+    
     if is_shop_login:
         is_shop_login = check_shop_login_from_db(shop_url=request.session['shop_url_pdf'])
+    
     force_update_scope = False
     if is_shop_login and check_access and data.get('shop') == request.session['shop_url_pdf']:
         shop_model = request.env['shopify.pdf.shop'].sudo().search([('name', '=', request.session['shop_url_pdf'])],
@@ -43,6 +45,7 @@ def is_shop_login(check_access=False, check_force=True):
         is_shop_login = is_shop_login and shopify_helper.check_access()
     else:
         shop_url = None
+        # Try to get shop from request parameters first
         if request.params.get('shop') is None:
             if request.httprequest.referrer is not None:
                 parsed_url = urlparse(request.httprequest.referrer)
@@ -53,25 +56,45 @@ def is_shop_login(check_access=False, check_force=True):
 
                 if parsed_url.query == '':
                     if parsed_url.path == 'edit':
-                        url = request.httprequest.json.get('data').get('info').get('embed')
-                        pattern = r'shop=([^&]+)'
-                        match = re.search(pattern, url)
-                        shop_url = match.group(1)
+                        # For edit endpoint, try to extract from JSON data
+                        try:
+                            url = request.httprequest.json.get('data', {}).get('info', {}).get('embed', '')
+                            pattern = r'shop=([^&]+)'
+                            match = re.search(pattern, url)
+                            if match:
+                                shop_url = match.group(1)
+                        except (AttributeError, TypeError, ValueError):
+                            # If any error occurs, continue with other methods
+                            pass
                     else:
                         shop_url = parsed_url.path
                 else:
+                    # Safe extraction from query params
                     query_params = parse_qs(parsed_url.query)
-                    shop_url = query_params['shop'][0]
+                    if 'shop' in query_params and query_params['shop']:
+                        shop_url = query_params['shop'][0]
+            
+            # If still can't find shop_url, try to extract from data
+            if not shop_url and 'shop' in data:
+                shop_url = data['shop']
         else:
             shop_url = request.params.get('shop')
+        
+        # Safety check - don't proceed with invalid shop_url
+        if not shop_url:
+            return False
+        
+        # Find shop in database
         shop_model = request.env['shopify.pdf.shop'].sudo().search([('name', '=', shop_url)], limit=1)
+        if not shop_model:
+            return False
+            
         token = shop_model.token
         force_update_scope = shop_model.force_update_scope
         shopify_helper = ShopifyHelper(shop_url=shop_url, token=token, env=request.env)
         is_shop_login = shopify_helper.check_access()
         request.session['shop_url_pdf'] = shop_url
 
-    # force_update_scope = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.force_update_scopes')
     if is_shop_login and force_update_scope and check_force:
         is_shop_login = False
     return is_shop_login

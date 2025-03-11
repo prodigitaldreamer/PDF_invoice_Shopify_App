@@ -13,17 +13,20 @@ import {
   Scrollable,
   TextContainer,
   Box,
-  BlockStack
+  InlineStack
 } from '@shopify/polaris';
 import { SearchIcon } from '@shopify/polaris-icons';
+import axios from 'axios';
 
 // Import the variables data (you may need to convert to TypeScript)
 import { data } from '../data/DataVariable';
 
+// Update the TemplateEditProps to include all needed information
 interface TemplateEditProps {
   templateId?: string;
   templateHtml?: string;
-  templateJson?: string; // Add this
+  templateJson?: string;
+  templateInfo?: any; // Add this to store complete template info
   onSave?: (html: string, design: any) => void;
   onClose?: () => void;
 }
@@ -46,9 +49,10 @@ declare global {
 }
 
 const TemplateEdit: React.FC<TemplateEditProps> = ({ 
+  templateId,
   templateHtml = '',
-  templateJson = '', // Add this param
-  onSave, 
+  templateJson = '',
+  templateInfo = {}, // Add this param 
   onClose 
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -129,11 +133,48 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     }
 
     try {
-      // Initialize with full design capabilities
+      // Define types for merge tags
+      interface MergeTagItem {
+        name: string;
+        value: string;
+      }
+      
+      interface MergeTagsGroup {
+        name: string;
+        mergeTags: Record<string, MergeTagItem>;
+      }
+      
+      interface MergeTags {
+        [key: string]: MergeTagsGroup;
+      }
+      
+      // Convert our data structure to Unlayer's merge tags format
+      const mergeTags: MergeTags = {};
+      
+      // Create category groups from our data structure
+      data.forEach(category => {
+        const categoryTags: Record<string, MergeTagItem> = {};
+        
+        // Add each variable as a merge tag
+        category.options.forEach(option => {
+          categoryTags[option.value] = {
+            name: option.string,
+            value: option.value
+          };
+        });
+        
+        // Add the category to the merge tags object
+        mergeTags[category.title] = {
+          name: category.title,
+          mergeTags: categoryTags
+        };
+      });
+
+      // Initialize with full design capabilities and merge tags
       window.unlayer.init({
-        id: 'editor-container', 
+        id: 'editor-container',
         projectId: 267669,
-        displayMode: "email", // Can also use "web" if needed
+        displayMode: "email",
         appearance: {
           theme: 'light',
           panels: {
@@ -142,7 +183,18 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
             }
           }
         },
-        // Enable all design tools
+        // Add merge tags configuration
+        mergeTags: mergeTags,
+        // Display merge tags toolbar button
+        mergeTagsConfig: {
+          enabled: true,
+          displayInToolbar: true, // Show merge tags button in toolbar
+          toolbar: {
+            title: "Variables",
+            icon: 'fa-smile',
+          }
+        },
+        // Rest of your existing configuration
         tools: {
           // Make sure all design tools are enabled
           text: {
@@ -321,32 +373,82 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     }
   };
 
-  // Save the template
+  // Update the handleSave function to use the correct API endpoint and type
   const handleSave = async () => {
     if (!window.unlayer) return;
-
+  
     setIsSaving(true);
     try {
       window.unlayer.exportHtml((data) => {
-        console.log("Saving template:", { 
-          html_length: data.html?.length,
-          design: typeof data.design === 'object' ? 'object' : typeof data.design
+        const { html, design } = data;
+        
+        // Format data according to what the API expects
+        const templateData = {
+          name: templateInfo?.name || 'Untitled template',
+          html: html,
+          json: JSON.stringify(design),
+          id: templateId || '',
+          type: templateInfo?.type || 'invoice',
+          page_size: templateInfo?.page_size || 'a4',
+          orientation: templateInfo?.orientation || 'portrait',
+          font_size: templateInfo?.font_size || '16.0',
+          font_family: templateInfo?.font_family || '',
+          top_margin: templateInfo?.top_margin || '16.0',
+          bottom_margin: templateInfo?.bottom_margin || '16.0',
+          left_margin: templateInfo?.left_margin || '16.0',
+          right_margin: templateInfo?.right_margin || '16.0',
+          date_format: templateInfo?.date_format || '%d/%m/%y',
+          default: templateInfo?.default || false,
+          shop: templateInfo?.shop
+        };
+        
+        // Determine the correct API endpoint type based on whether we're editing or creating
+        const apiType = templateId ? 'edit' : '';
+        
+        // Use the appropriate API endpoint
+        axios.post(`/pdf/template/update/${apiType}`, {
+          data: {
+            info: templateData,
+            shop: window.config?.info?.shop,
+          },
+          // Add shop at the root level for authentication
+         
+        }, {
+          onUploadProgress: () => {
+            setIsSaving(true);
+          }
+        }).then((res) => {
+          setTimeout(() => {
+            if (res.data.result) {
+              setHasUnsavedChanges(false);
+              setToastMessage('Template saved successfully');
+              setToastError(false);
+              setShowToast(true);
+              
+              // Redirect if this was a new template
+              if (!templateId && res.data.result.record) {
+                window.location.pathname = `/pdf/templates/${res.data.result.record}/design`;
+              }
+            } else {
+              setToastError(true);
+              setToastMessage('Something went wrong. Please try again!');
+              setShowToast(true);
+            }
+            setIsSaving(false);
+          }, 1500);
+        }).catch((error) => {
+          console.error('Error saving template:', error);
+          setToastError(true);
+          setToastMessage('Something went wrong. Please try again!');
+          setShowToast(true);
+          setIsSaving(false);
         });
-        if (onSave) {
-          // Send both HTML and the full design object for storage
-          onSave(data.html, data.design);
-        }
-        setHasUnsavedChanges(false);
-        setToastError(false);
-        setToastMessage('Template saved successfully');
-        setShowToast(true);
       });
     } catch (error) {
-      console.error("Error saving template:", error);
+      console.error('Error in handleSave:', error);
       setToastError(true);
-      setToastMessage('Failed to save template');
+      setToastMessage('Error saving template');
       setShowToast(true);
-    } finally {
       setIsSaving(false);
     }
   };
@@ -469,6 +571,7 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
             content: 'Close',
             onAction: () => setShowVariablesModal(false),
           }}
+          size='large'
         >
           <Modal.Section>
             <TextContainer>
@@ -491,18 +594,17 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
                 category.options.length > 0 && (
                   <Box key={category.title} paddingBlockEnd="400">
                     <Text variant="headingMd" as="h2">{category.title}</Text>
-                    <BlockStack gap="400">
+                    <InlineStack gap="400" wrap={false}>
                       {category.options.map((item) => (
                         <Button 
                           key={item.value} 
                           onClick={() => handleVariableSelect(item.value)}
                           fullWidth
-                          variant='plain'
                         >
                           {item.string}
                         </Button>
                       ))}
-                    </BlockStack>
+                    </InlineStack>
                   </Box>
                 )
               ))}

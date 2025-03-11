@@ -283,7 +283,7 @@ class PdfReportController(http.Controller):
                     ]
                     response = request.make_response(pdf_content, headers=pdfhttpheaders)
                     # response.set_cookie('fileToken', token)
-                    return response
+                    return merge_html_css
 
             pdfhttpheaders = [
                 ('Content-Type', 'application/pdf'),
@@ -294,7 +294,7 @@ class PdfReportController(http.Controller):
             ]
             pdf_content = pdfkit.from_string("", False, )
 
-            return request.make_response(pdf_content, headers=pdfhttpheaders)
+            return merge_html_css
         except Exception as e:
             self.create_shop_log(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
