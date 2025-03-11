@@ -1,6 +1,6 @@
 - PDF Invoice app for Shopify
 - Module name : shopify_pdf_invoice
-- run install requirements
+- run install requirements.txt trong module
   
   auto remove wkhtmltopdf 
   sudo apt install wkhtmltopdf
