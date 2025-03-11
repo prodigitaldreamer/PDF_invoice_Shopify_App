@@ -17,7 +17,6 @@ import {
     Frame,
 } from '@shopify/polaris';
 import {
-    DuplicateIcon,
     InfoIcon,
 } from '@shopify/polaris-icons';
 import axios from 'axios';
@@ -114,11 +113,17 @@ const SettingsPage: React.FC = () => {
     const [configLoaded, setConfigLoaded] = useState<boolean>(false);
 
     // Templates for the dropdown
-    const templateOptions = [
-        { label: 'Default Template', value: 'default' },
-        { label: 'Minimal Template', value: 'minimal' },
-        { label: 'Detailed Template', value: 'detailed' },
-    ];
+    const templateOptions = React.useMemo(() => {
+        if (!config?.templates) return [{ label: "Please choose template", value: "" }];
+        
+        return [
+            { label: "Please choose template", value: "" },
+            ...config.templates.map(template => ({
+                label: template.label,
+                value: template.value.toString()
+            }))
+        ];
+    }, [config]);
 
     // Load config data safely with interval check
     useEffect(() => {
@@ -252,9 +257,52 @@ const SettingsPage: React.FC = () => {
 
     // Copy code to clipboard
     const copyToClipboard = useCallback(() => {
-        navigator.clipboard.writeText(notificationSettings.code);
-        toggleToast('Code copied to clipboard');
+        try {
+            // Try modern clipboard API first
+            navigator.clipboard.writeText(notificationSettings.code)
+                .then(() => {
+                    toggleToast('Code copied to clipboard');
+                })
+                .catch(() => {
+                    // Fallback to older method
+                    const textField = document.getElementById('setting_variables') as HTMLInputElement;
+                    if (textField) {
+                        textField.select();
+                        textField.setSelectionRange(0, 99999);
+                        document.execCommand('copy');
+                        toggleToast('Code copied to clipboard');
+                    } else {
+                        toggleToast('Could not copy code', true);
+                    }
+                });
+        } catch (error) {
+            console.error('Copy error:', error);
+            toggleToast('Could not copy code', true);
+        }
     }, [notificationSettings.code, toggleToast]);
+
+    // Create email link generator function similar to _email_link_download
+    const generateEmailLinkCode = useCallback((template: string, text: string) => {
+        return `<a target="_blank" href="{{ shop.url }}/apps/pdf-invoice/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
+    }, []);
+
+    // Add effect to update code field when template or download text changes
+    useEffect(() => {
+        if (notificationSettings.defaultEmailTemplate) {
+            setNotificationSettings(prevState => ({
+                ...prevState,
+                code: generateEmailLinkCode(
+                    notificationSettings.defaultEmailTemplate,
+                    notificationSettings.downloadText || 'Download Invoice'
+                )
+            }));
+        } else {
+            setNotificationSettings(prevState => ({
+                ...prevState,
+                code: 'Select a template to generate PDF download link'
+            }));
+        }
+    }, [notificationSettings.defaultEmailTemplate, notificationSettings.downloadText, generateEmailLinkCode]);
 
     // Handle form submission
     const handleSubmit = useCallback(async () => {
@@ -478,14 +526,42 @@ const SettingsPage: React.FC = () => {
                         {/* Notification Settings Card */}
                         <Layout>
                             <Layout.AnnotatedSection
-                                title="Insert a download link into the notification email"
-                                description="This allows your customers to download their invoices from the Shopify order email"
+                                title="Shopify email notification"
+                                description="Insert a download link for PDF invoice in your Shopify order email notification"
                             >
                                 <Card>
                                     <Box paddingBlock="400" paddingInline="500">
                                         <BlockStack gap="400">
+                                            {/* Collapsible instruction section */}
+                                            <Button
+                                                onClick={toggleInstructions}
+                                                icon={InfoIcon}
+                                                variant="plain"
+                                                disclosure={isInstructionsOpen ? 'up' : 'down'}
+                                            >
+                                                Insert code in Shopify email notification
+                                            </Button>
+                                            <Collapsible
+                                                open={isInstructionsOpen}
+                                                id="how-to-insert-code"
+                                                transition={{ duration: '150ms' }}
+                                            >
+                                                <Box paddingBlockStart="400">
+                                                    <BlockStack gap="300">
+                                                        <List type="number">
+                                                            <List.Item>Choose your template and customize download link text for Shopify email notification</List.Item>
+                                                            <List.Item>Go to your Shopify store settings Notifications</List.Item>
+                                                            <List.Item>Copy code and insert it in your email notification</List.Item>
+                                                        </List>
+                                                        <Text as="p" variant="bodyMd">
+                                                            Need more help? Contact us at <a href="mailto:support@hapoapps.com" target="_blank" rel="noopener noreferrer">support@hapoapps.com</a>
+                                                        </Text>
+                                                    </BlockStack>
+                                                </Box>
+                                            </Collapsible>
+
                                             <Select
-                                                label="Default template for email notification"
+                                                label="Default PDF template for email notification"
                                                 options={templateOptions}
                                                 value={notificationSettings.defaultEmailTemplate}
                                                 onChange={handleNotificationSettingChange('defaultEmailTemplate')}
@@ -499,13 +575,16 @@ const SettingsPage: React.FC = () => {
                                                 autoComplete="off"
                                             />
                                             <TextField
-                                                label="Code"
+                                                id="setting_variables"
+                                                label="Copy code"
                                                 value={notificationSettings.code}
                                                 onChange={handleNotificationSettingChange('code')}
-                                                placeholder="Value"
                                                 autoComplete="off"
-                                                prefix={<></>}
-                                                suffix={<Button icon={DuplicateIcon} variant="plain" accessibilityLabel="Copy code" onClick={copyToClipboard} />}
+                                                readOnly
+                                                labelAction={{
+                                                    content: 'Copy to clipboard',
+                                                    onAction: copyToClipboard
+                                                }}
                                             />
                                             <Button
                                                 variant="primary" 
