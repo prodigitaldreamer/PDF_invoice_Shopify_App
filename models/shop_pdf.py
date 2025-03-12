@@ -27,6 +27,7 @@ from lxml import etree, html
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, Tag
 import html as Html
+import json
 
 day_endings = {
     '01': 'st',
@@ -56,12 +57,58 @@ class Shopify(models.Model):
     def get_pdf(self, orders=None, templates=None, image_data=None, type=None, isDraftOrder=False, prepare_data=None):
         pdf_writer = PyPDF2.PdfFileWriter()
         session = {'shop': self}
-        self.start_shopify_session()
-        current_shop = shopify.Shop.current()
+        
         for template in templates:
             for order in orders:
-                transactions = shopify.Transaction.find(order_id=order.id)
-                transaction = transactions[-1] if len(transactions) > 0 else None
+                # Khởi tạo lại session cho mỗi đơn hàng
+                self.start_shopify_session()
+                current_shop = shopify.Shop.current()
+                
+                # GraphQL client setup
+                client = shopify.GraphQL()
+                
+                # GraphQL query for transactions
+                query = '''
+                query TransactionsForOrder($orderId: ID!) {
+                order(id: $orderId) {
+                    transactions(first: 10) {
+                        gateway
+                        status
+                        kind
+                        paymentDetails {
+                        ... on CardPaymentDetails {
+                        company
+                        name
+                        paymentMethodName
+                        number
+                        }
+                        ... on ShopPayInstallmentsPaymentDetails {
+                        paymentMethodName
+                        }
+                        }
+                      }
+                    }
+                }
+                '''
+                variables = {
+                    'orderId': f"gid://shopify/Order/{order.id}"
+                }
+                res = client.execute(query, variables=variables)
+                result = json.loads(res)
+                print(result)
+                
+                # Extract transaction data from GraphQL response
+                transaction = None
+                if result.get('data', {}).get('order', {}).get('transactions', {}):
+                    latest_transaction = result['data']['order']['transactions'][-1]
+                    if 'paymentDetails' in latest_transaction:
+                        transaction = {
+                            'paymentDetails': {
+                                'creditCardCompany': latest_transaction.get('paymentDetails', {}).get('company', 'unknown'),
+                                'creditCardNumber': latest_transaction.get('paymentDetails', {}).get('number', '--')
+                            },
+                        }
+
                 merge_html_css, options = self.get_pdf_data(order=order, session=session, template=template,
                                                             image_data=image_data, type=type, isDraftOrder=isDraftOrder,
                                                             prepare_data=prepare_data, transaction=transaction)
@@ -118,8 +165,9 @@ class Shopify(models.Model):
             if current_shop:
                 currency_format = current_shop.attributes.get('money_format')
                 self.currency_format = currency_format
+    
         currency_format = self.currency_format
-        shopify.ShopifyResource.clear_session()
+    
         if order is not None:
             items = []
             currency = order.attributes.get('currency') if order.attributes.get('currency') else order.attributes.get(
@@ -588,9 +636,9 @@ class Shopify(models.Model):
             payment_method = '--'
             payment_card = '--'
             if transaction:
-                if transaction.attributes.get('payment_details'):
-                    payment_method = transaction.attributes.get('payment_details').attributes.get('credit_card_company')
-                    payment_card = transaction.attributes.get('payment_details').attributes.get('credit_card_number')
+                if transaction.get('paymentDetails'):
+                    payment_method = transaction.get('paymentDetails').get('creditCardCompany')
+                    payment_card = transaction.get('paymentDetails').get('creditCardNumber')
                     if payment_method == 'unknown':
                         if order.attributes.get('payment_gateway_names') and len(
                                 order.attributes.get('payment_gateway_names')) > 0:
