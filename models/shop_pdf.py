@@ -57,57 +57,54 @@ class Shopify(models.Model):
     def get_pdf(self, orders=None, templates=None, image_data=None, type=None, isDraftOrder=False, prepare_data=None):
         pdf_writer = PyPDF2.PdfFileWriter()
         session = {'shop': self}
-        
+        current_shop = shopify.Shop.current()
         for template in templates:
             for order in orders:
-                # Khởi tạo lại session cho mỗi đơn hàng
-                self.start_shopify_session()
-                current_shop = shopify.Shop.current()
-                
-                # GraphQL client setup
-                client = shopify.GraphQL()
-                
-                # GraphQL query for transactions
-                query = '''
-                query TransactionsForOrder($orderId: ID!) {
-                order(id: $orderId) {
-                    transactions(first: 10) {
-                        gateway
-                        status
-                        kind
-                        paymentDetails {
-                        ... on CardPaymentDetails {
-                        company
-                        name
-                        paymentMethodName
-                        number
-                        }
-                        ... on ShopPayInstallmentsPaymentDetails {
-                        paymentMethodName
-                        }
-                        }
-                      }
-                    }
-                }
-                '''
-                variables = {
-                    'orderId': f"gid://shopify/Order/{order.id}"
-                }
-                res = client.execute(query, variables=variables)
-                result = json.loads(res)
-                print(result)
-                
-                # Extract transaction data from GraphQL response
                 transaction = None
-                if result.get('data', {}).get('order', {}).get('transactions', {}):
-                    latest_transaction = result['data']['order']['transactions'][-1]
-                    if 'paymentDetails' in latest_transaction:
-                        transaction = {
-                            'paymentDetails': {
-                                'creditCardCompany': latest_transaction.get('paymentDetails', {}).get('company', 'unknown'),
-                                'creditCardNumber': latest_transaction.get('paymentDetails', {}).get('number', '--')
-                            },
+                if not isDraftOrder:
+                    # Khởi tạo lại session cho mỗi đơn hàng
+                    self.start_shopify_session()
+                    # GraphQL client setup
+                    client = shopify.GraphQL()
+                    # GraphQL query for transactions
+                    query = '''
+                    query TransactionsForOrder($orderId: ID!) {
+                    order(id: $orderId) {
+                        transactions(first: 10) {
+                            gateway
+                            status
+                            kind
+                            paymentDetails {
+                            ... on CardPaymentDetails {
+                            company
+                            name
+                            paymentMethodName
+                            number
+                            }
+                            ... on ShopPayInstallmentsPaymentDetails {
+                            paymentMethodName
+                            }
+                            }
                         }
+                        }
+                    }
+                    '''
+                    variables = {
+                        'orderId': f"gid://shopify/Order/{order.id}"
+                    }
+                    
+                    res = client.execute(query, variables=variables)
+                    result = json.loads(res)
+                    # Extract transaction data from GraphQL response
+                    if result.get('data', {}).get('order', {}).get('transactions', {}):
+                        latest_transaction = result['data']['order']['transactions'][-1]
+                        if 'paymentDetails' in latest_transaction:
+                            transaction = {
+                                'paymentDetails': {
+                                    'creditCardCompany': latest_transaction.get('paymentDetails', {}).get('company', 'unknown'),
+                                    'creditCardNumber': latest_transaction.get('paymentDetails', {}).get('number', '--')
+                                },
+                            }
 
                 merge_html_css, options = self.get_pdf_data(order=order, session=session, template=template,
                                                             image_data=image_data, type=type, isDraftOrder=isDraftOrder,
