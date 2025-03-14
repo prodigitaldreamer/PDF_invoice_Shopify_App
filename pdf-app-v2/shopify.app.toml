@@ -1,0 +1,19 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "b532f4655dbba6b411aa1b704520ed69"
+application_url = "https://d0d8-1-54-30-234.ngrok-free.app/shopify/pdf"
+embedded = true
+name = "PDF_APP_v2"
+handle = "pdf_app_v2"
+
+[build]
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2025-01"
+
+[auth]
+redirect_urls = [ "https://d0d8-1-54-30-234.ngrok-free.app/shopify/pdf/auth" ]
+
+[pos]
+embedded = false
