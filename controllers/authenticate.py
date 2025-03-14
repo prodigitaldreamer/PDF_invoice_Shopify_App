@@ -138,7 +138,7 @@ class ShopifyConnector(http.Controller):
                 scope, call_back
             )
             # return werkzeug.utils.redirect(permission_url)
-            print(permission_url)
+            print("perm",permission_url)
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
             return request.render('shopify_pdf_invoice.redirect', {

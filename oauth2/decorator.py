@@ -79,16 +79,8 @@ def is_shop_login(check_access=False, check_force=True):
                 shop_url = data['shop']
         else:
             shop_url = request.params.get('shop')
-        
-        # Safety check - don't proceed with invalid shop_url
-        if not shop_url:
-            return False
-        
         # Find shop in database
         shop_model = request.env['shopify.pdf.shop'].sudo().search([('name', '=', shop_url)], limit=1)
-        if not shop_model:
-            return False
-            
         token = shop_model.token
         force_update_scope = shop_model.force_update_scope
         shopify_helper = ShopifyHelper(shop_url=shop_url, token=token, env=request.env)

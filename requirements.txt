@@ -1,4 +1,4 @@
-shopifyapi
+shopifyapi===12.7.0
 cssutils 
 PyPDF2 
 pdfkit 

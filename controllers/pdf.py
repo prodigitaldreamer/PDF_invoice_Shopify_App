@@ -918,7 +918,7 @@ class PdfReportController(http.Controller):
         }
         return request.make_response((json.dumps(error)), headers=[('Content-Type', 'application/json; charset=utf-8')])
 
-    @http.route('/pdf/print/<int:template_id>/<int:order_id>/<int:order_number>', type='http', auth="public",
+    @http.route('/pdfs/print/<int:template_id>/<int:order_id>/<int:order_number>', type='http', auth="public",
                 save_session=False)
     def email_notification_pdf(self, template_id=None, order_id=None, order_number=None):
         try:
