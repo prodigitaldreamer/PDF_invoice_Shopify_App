@@ -55,6 +55,14 @@ export interface ConfigData {
   list_apps: any[];
   shop: string;
   api_key: string;
+  setup_tasks : {
+   check_infor: boolean;
+   check_print_button: boolean;
+   check_insert_button: boolean;
+   check_custom_invoice_number: boolean;
+   check_custom_invoice_template: boolean;
+  }
+
 }
 
 export interface Task {

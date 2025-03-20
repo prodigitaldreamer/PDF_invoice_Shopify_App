@@ -49,7 +49,8 @@ class Main(http.Controller):
                     'current_plan': shop.sudo().get_current_plan_data(),
                     'all_plans': request.env['shopify.pdf.plan'].sudo().get_all_plans_data(),
                     'shop': shop.name,
-                    'api_key': app_key
+                    'api_key': app_key,
+                    'setup_tasks': self.get_setup_tasks(shop)
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
@@ -709,6 +710,55 @@ class Main(http.Controller):
             return {
                 'status': False
             }
+
+    @http.route('/pdf/save/task', type='json', auth='public', csrf=False, save_session=False)
+    def save_task_status(self):
+        try:
+            ensure_login()
+            data = json.loads(request.httprequest.data).get('data')
+            task_id = data.get('taskId')
+            checked = data.get('checked', False)
+            
+            Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
+            shop_model = Shopify.shop_model
+            
+            if shop_model:
+                # Update appropriate fields based on task ID
+                if task_id == 1:
+                    shop_model.check_infor = checked
+                elif task_id == 2:
+                    shop_model.check_print_button = checked
+                elif task_id == 3 and checked:
+                    shop_model.check_insert_button = checked
+                elif task_id == 4 and checked:
+                    shop_model.check_custom_invoice_number = checked
+                elif task_id == 5:
+                    shop_model.check_custom_invoice_template = checked
+                return {
+                    'status': True,
+                    'message': 'Task status updated successfully'
+                }
+            return {
+                'status': False,
+                'message': 'Shop not found'
+            }
+        except Exception as e:
+            self.create_shop_log(log=traceback.format_exc())
+            _logger.error(traceback.format_exc())
+            return {
+                'status': False,
+                'message': 'Error updating task status'
+            }
+
+    def get_setup_tasks(self, shop):
+        setup_tasks = {
+            'check_infor': shop.check_infor,
+            'check_print_button': shop.check_print_button,
+            'check_insert_button': shop.check_insert_button,
+            'check_custom_invoice_number': shop.check_custom_invoice_number,
+            'check_custom_invoice_template': shop.check_custom_invoice_template
+        }
+        return setup_tasks
 
     def render_exception(self):
         headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[

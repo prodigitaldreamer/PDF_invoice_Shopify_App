@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Page,
   Card,
   Text,
   ProgressBar,
-  Button,
   InlineStack,
   BlockStack,
   Box,
   Layout,
-  Icon,
+  Checkbox,
 } from '@shopify/polaris';
-import { SkeletonIcon, CheckIcon } from '@shopify/polaris-icons';
 import { ConfigData, Task } from '../types';
 
 export const HomeSetup: React.FC = () => {
@@ -71,7 +70,7 @@ export const HomeSetup: React.FC = () => {
     // Function to check if config is available
     const checkForConfig = () => {
       if (window.config) {
-        console.log("window.config loaded", );
+        console.log("window.config loaded", window.config );
         setConfig(window.config);
         setConfigLoaded(true);
         return true;
@@ -105,45 +104,29 @@ export const HomeSetup: React.FC = () => {
   
   // Update task completion status based on config data
   useEffect(() => {
-    if (config?.info) {
-      const info = config.info;
+    if (config) {
+      const setupTasks = config.setup_tasks;
       
       // Create a local copy of tasks to update
       let updatedTasks = [...tasks];
       
-      // Task 1: Check if store information is filled
-      if (info.name !== '' || info.phone !== '') {
-        updatedTasks = updatedTasks.map(task => 
-          task.id === 1 ? { ...task, completed: true } : task
-        );
-      }
-      
-      // Task 2: Check if print invoice button is enabled
-      if (info.allow_frontend || info.allow_backend) {
-        updatedTasks = updatedTasks.map(task => 
-          task.id === 2 ? { ...task, completed: true } : task
-        );
-      }
-      
-      // Task 3: Check email notification template (assuming this is the right field)
-      if (info.email_notify_template && info.email_notify_template !== '') {
-        updatedTasks = updatedTasks.map(task => 
-          task.id === 3 ? { ...task, completed: true } : task
-        );
-      }
-      
-      // Task 4: Check invoice numbering
-      if (info.invoice_start_number && info.invoice_start_number !== '') {
-        updatedTasks = updatedTasks.map(task => 
-          task.id === 4 ? { ...task, completed: true } : task
-        );
-      }
-      
-      // Task 5: Check if templates exist
-      if (config.templates && config.templates.length > 0) {
-        updatedTasks = updatedTasks.map(task => 
-          task.id === 5 ? { ...task, completed: true } : task
-        );
+      // Update based on both info and setupTasks
+      if (setupTasks) {
+        // Update task status directly from setupTasks
+        updatedTasks = updatedTasks.map(task => {
+          if (task.id === 1) {
+            return { ...task, completed: setupTasks.check_infor };
+          } else if (task.id === 2) {
+            return { ...task, completed: setupTasks.check_print_button };
+          } else if (task.id === 3) {
+            return { ...task, completed: setupTasks.check_insert_button };
+          } else if (task.id === 4) {
+            return { ...task, completed: setupTasks.check_custom_invoice_number };
+          } else if (task.id === 5) {
+            return { ...task, completed: setupTasks.check_custom_invoice_template };
+          }
+          return task;
+        });
       }
       
       // Update state with all changes
@@ -153,23 +136,84 @@ export const HomeSetup: React.FC = () => {
 
   const completedTasks = tasks.filter(task => task.completed).length;
   const progressPercentage = (completedTasks / tasks.length) * 100;
-  
-  const handleSettings = (taskId: number) => {
-    console.log(`Opening settings for task ${taskId}`);
-    // Implementation for opening settings
-  };
-
-  // Handler to toggle expanded state
-  const toggleExpand = (taskId: number) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId ? { ...task, expanded: !task.expanded } : task
-      )
-    );
-  };
 
   // Get shop name from config, default to "Store" if not available
   const shopName = config?.info?.shop_name || "Store";
+
+  // Add navigate function from React Router
+
+  
+  // Replace navigate with direct location change
+  const handleTaskClick = (taskId: number) => {
+    // Check which task was clicked and navigate to appropriate section
+    if (taskId === 1) {
+      window.location.href = '/pdf/settings?section=store-info';
+    } else if (taskId === 2) {
+      window.location.href = '/pdf/settings?section=print-button';
+    } else if (taskId === 3) {
+      window.location.href = '/pdf/settings?section=email-notification';
+    } else if (taskId === 4) {
+      window.location.href = '/pdf/settings?section=invoice-number';
+    }
+  };
+
+  // Add a function to handle checkbox changes
+  const handleCheckboxChange = (taskId: number, checked: boolean, e?: React.MouseEvent | React.ChangeEvent) => {
+    // Stop any event propagation first
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // Store original tasks state for potential rollback
+    const originalTasks = [...tasks];
+    
+    // Optimistic UI update - immediately show the change
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, completed: checked } : task
+    );
+    
+    setTasks(updatedTasks);
+    
+    // Get shop from config
+    const shop = config?.info?.shop || '';
+    
+    // Create data object properly
+    const requestData = {
+      taskId: taskId,
+      checked: checked,
+      shop: shop
+    };
+    
+    // Save the task status to the backend using axios
+    axios.post('/pdf/save/task', {
+      data: requestData  // Wrap in 'data' property as requested
+    })
+    .then(response => {
+      const data = response.data;
+      if (data.result.status) {
+        shopify.toast.show('Task status updated successfully', {
+          duration: 5000,
+        });
+        // Ensure UI is updated with the confirmed state from server
+        const confirmedTasks = tasks.map(task => 
+          task.id === taskId ? { ...task, completed: checked } : task
+        );
+        setTasks(confirmedTasks);
+      } else {
+        shopify.toast.show('Failed to update task status', {
+          duration: 5000,
+        });
+        // Revert the optimistic UI update if the API call fails
+        setTasks(originalTasks);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      // Revert the optimistic UI update if the API call fails
+      setTasks(originalTasks);
+    });
+  };
+
   return (
     <Page title={`Welcome ${shopName}`}>
       <Layout>
@@ -200,14 +244,25 @@ export const HomeSetup: React.FC = () => {
                 padding="400"
               >
                 <InlineStack gap="400" blockAlign="start" wrap={false}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <Icon
-                      source={task.completed ? CheckIcon : SkeletonIcon}
+                  <div 
+                    style={{ display: 'flex', alignItems: 'center' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      checked={task.completed}
+                      onChange={(checked) => {
+                        // Pass the synthetic event to stop propagation
+                        handleCheckboxChange(task.id, checked);
+                      }}
+                      label=""
                     />
                   </div>
                   <BlockStack gap="100">
                     <div
-                      onClick={() => toggleExpand(task.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTaskClick(task.id);
+                      }}
                       style={{ cursor: 'pointer' }}
                     >
                       <Text
@@ -218,27 +273,10 @@ export const HomeSetup: React.FC = () => {
                         {task.title}
                       </Text>
                     </div>
-                    {task.expanded && (
-                      <>
-                        {task.description && (
-                          <Text as="p" variant="bodyMd" tone="subdued">
-                            {task.description}
-                          </Text>
-                        )}
-                        {task.hasSettings && (
-                          <Box paddingBlockStart="200">
-                            <InlineStack gap="200">
-                              <Button
-                                onClick={() => handleSettings(task.id)}
-                                variant="secondary"
-                                size="slim"
-                              >
-                                Setting
-                              </Button>
-                            </InlineStack>
-                          </Box>
-                        )}
-                      </>
+                    {task.description && (
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        {task.description}
+                      </Text>
                     )}
                   </BlockStack>
                 </InlineStack>

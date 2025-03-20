@@ -64,6 +64,12 @@ class Shopify(models.Model):
     is_allow_frontend = fields.Boolean(default=False)
     is_open_template_setting = fields.Boolean(default=False)
     is_open_setup_info = fields.Boolean(default=False)
+    #Home Setup
+    check_infor = fields.Boolean(default=False)
+    check_print_button = fields.Boolean(default=False)
+    check_insert_button = fields.Boolean(default=False)
+    check_custom_invoice_number = fields.Boolean(default=False)
+    check_custom_invoice_template = fields.Boolean(default=False)
 
     def get_data(self):
         try:

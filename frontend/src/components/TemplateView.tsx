@@ -212,9 +212,23 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
       return;
     }
     
-    // Otherwise, directly navigate to templates page
-    window.location.href = '/pdf/templates';
+    // Otherwise, directly navigate to templates page with shop parameter
+    const shopName = window.config?.info?.shop || '';
+    window.location.href = shopName ? `/pdf/templates?shop=${shopName}` : '/pdf/templates';
   }, [onBack]);
+
+  const handleBack = () => {
+    // Get shop from window.config or session storage
+    const shopName = window.config?.info?.shop || '';
+    
+    // Redirect with shop parameter to maintain session
+    if (shopName) {
+      window.location.href = `/pdf/templates?shop=${shopName}`;
+    } else {
+      // Fallback to regular navigation if shop isn't available
+      window.location.href = '/pdf/templates';
+    }
+  };
 
   const handleDelete = async () => {
     if (!templateId) return;
@@ -232,7 +246,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
         if (onBack) {
           onBack();
         } else {
-          window.location.href = `/pdf/templates/${window.config?.info?.shop || ''}`;
+          window.location.href = `/pdf/templates/?shop=${window.config?.info?.shop || ''}`;
         }
       } else {
         updateState({ error: 'Failed to delete template' }, false);
@@ -286,7 +300,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
         title={templateId ? `Edit Template: ${state.name}` : "Create Template"}
         backAction={{
           content: 'Templates',
-          onAction: handleDiscard
+          onAction: handleBack
         }}
         primaryAction={{
           content: 'Open Editor',

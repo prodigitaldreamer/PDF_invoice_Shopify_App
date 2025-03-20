@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
     Page,
     Card,
@@ -9,16 +9,11 @@ import {
     InlineStack,
     Text,
     Select,
-    Collapsible,
-    List,
     Layout,
     TextContainer,
     Toast,
     Frame,
 } from '@shopify/polaris';
-import {
-    InfoIcon,
-} from '@shopify/polaris-icons';
 import axios from 'axios';
 import { ConfigData } from '../types';
 
@@ -105,8 +100,6 @@ const SettingsPage: React.FC = () => {
         firstInvoiceNumber: '',
     });
 
-    // Collapsible state
-    const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
     
     // Add state to store config data - using the shared ConfigData type
     const [config, setConfig] = useState<ConfigData | null>(null);
@@ -241,11 +234,6 @@ const SettingsPage: React.FC = () => {
         }));
     }, []);
 
-    // Toggle instructions
-    const toggleInstructions = useCallback(() => {
-        setIsInstructionsOpen(prevOpen => !prevOpen);
-    }, []);
-
     // Toast handlers
     const toggleToast = useCallback((message: string, isError: boolean = false) => {
         setToastMessage(message);
@@ -283,7 +271,7 @@ const SettingsPage: React.FC = () => {
 
     // Create email link generator function similar to _email_link_download
     const generateEmailLinkCode = useCallback((template: string, text: string) => {
-        return `<a target="_blank" href="{{ shop.url }}/apps/pdf-invoice/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
+        return `<a target="_blank" href="{{ shop.url }}/apps/order-printer/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
     }, []);
 
     // Add effect to update code field when template or download text changes
@@ -356,6 +344,29 @@ const SettingsPage: React.FC = () => {
         />
     ) : null;
 
+    // Add refs for each section
+    const storeInfoRef = useRef<HTMLDivElement>(null);
+    const printButtonRef = useRef<HTMLDivElement>(null);
+    const emailNotificationRef = useRef<HTMLDivElement>(null);
+    const invoiceNumberRef = useRef<HTMLDivElement>(null);
+    
+    // Add effect to handle section focus when component mounts - without useLocation
+    useEffect(() => {
+        // Parse URL params directly
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section');
+        
+        if (section === 'store-info' && storeInfoRef.current) {
+            storeInfoRef.current.scrollIntoView({ behavior: 'smooth' });
+        } else if (section === 'print-button' && printButtonRef.current) {
+            printButtonRef.current.scrollIntoView({ behavior: 'smooth' });
+        } else if (section === 'email-notification' && emailNotificationRef.current) {
+            emailNotificationRef.current.scrollIntoView({ behavior: 'smooth' });
+        } else if (section === 'invoice-number' && invoiceNumberRef.current) {
+            invoiceNumberRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, []); // Only run once on mount
+
     return (
         <Frame>
             <Page 
@@ -378,83 +389,85 @@ const SettingsPage: React.FC = () => {
                                 title="Fill in your store information"
                                 description="This information will be auto-filled in your PDF invoices when you insert the corresponding variables into your templates"
                             >
-                                <Card>
-                                    <Box paddingBlock="400" paddingInline="500">
-                                        <BlockStack gap="400">
-                                            <TextField
-                                                label="Store Name"
-                                                value={storeInfo.storeName}
-                                                onChange={handleStoreInfoChange('storeName')}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                            />
-                                            <TextField
-                                                label="Phone Number"
-                                                value={storeInfo.phoneNumber}
-                                                onChange={handleStoreInfoChange('phoneNumber')}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                            />
-                                            <TextField
-                                                label="Email"
-                                                value={storeInfo.email}
-                                                onChange={handleStoreInfoChange('email')}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                                type="email"
-                                            />
-                                            <TextField
-                                                label="Address"
-                                                value={storeInfo.address}
-                                                onChange={handleStoreInfoChange('address')}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                            />
+                                <div ref={storeInfoRef} id="store-info-section">
+                                    <Card>
+                                        <Box paddingBlock="400" paddingInline="500">
+                                            <BlockStack gap="400">
+                                                <TextField
+                                                    label="Store Name"
+                                                    value={storeInfo.storeName}
+                                                    onChange={handleStoreInfoChange('storeName')}
+                                                    placeholder="Value"
+                                                    autoComplete="off"
+                                                />
+                                                <TextField
+                                                    label="Phone Number"
+                                                    value={storeInfo.phoneNumber}
+                                                    onChange={handleStoreInfoChange('phoneNumber')}
+                                                    placeholder="Value"
+                                                    autoComplete="off"
+                                                />
+                                                <TextField
+                                                    label="Email"
+                                                    value={storeInfo.email}
+                                                    onChange={handleStoreInfoChange('email')}
+                                                    placeholder="Value"
+                                                    autoComplete="off"
+                                                    type="email"
+                                                />
+                                                <TextField
+                                                    label="Address"
+                                                    value={storeInfo.address}
+                                                    onChange={handleStoreInfoChange('address')}
+                                                    placeholder="Value"
+                                                    autoComplete="off"
+                                                />
 
-                                            <InlineStack gap="500" wrap={false}>
-                                                <Box width="50%">
-                                                    <TextField
-                                                        label="State/Province"
-                                                        value={storeInfo.stateProvince}
-                                                        onChange={handleStoreInfoChange('stateProvince')}
-                                                        placeholder="Value"
-                                                        autoComplete="off"
-                                                    />
-                                                </Box>
-                                                <Box width="50%">
-                                                    <TextField
-                                                        label="City"
-                                                        value={storeInfo.city}
-                                                        onChange={handleStoreInfoChange('city')}
-                                                        placeholder="Value"
-                                                        autoComplete="off"
-                                                    />
-                                                </Box>
-                                            </InlineStack>
+                                                <InlineStack gap="500" wrap={false}>
+                                                    <Box width="50%">
+                                                        <TextField
+                                                            label="State/Province"
+                                                            value={storeInfo.stateProvince}
+                                                            onChange={handleStoreInfoChange('stateProvince')}
+                                                            placeholder="Value"
+                                                            autoComplete="off"
+                                                        />
+                                                    </Box>
+                                                    <Box width="50%">
+                                                        <TextField
+                                                            label="City"
+                                                            value={storeInfo.city}
+                                                            onChange={handleStoreInfoChange('city')}
+                                                            placeholder="Value"
+                                                            autoComplete="off"
+                                                        />
+                                                    </Box>
+                                                </InlineStack>
 
-                                            <InlineStack gap="500" wrap={false}>
-                                                <Box width="50%">
-                                                    <TextField
-                                                        label="Postcode"
-                                                        value={storeInfo.postcode}
-                                                        onChange={handleStoreInfoChange('postcode')}
-                                                        placeholder="Value"
-                                                        autoComplete="off"
-                                                    />
-                                                </Box>
-                                                <Box width="50%">
-                                                    <TextField
-                                                        label="VAT number"
-                                                        value={storeInfo.vatNumber}
-                                                        onChange={handleStoreInfoChange('vatNumber')}
-                                                        placeholder="Value"
-                                                        autoComplete="off"
-                                                    />
-                                                </Box>
-                                            </InlineStack>
-                                        </BlockStack>
-                                    </Box>
-                                </Card>
+                                                <InlineStack gap="500" wrap={false}>
+                                                    <Box width="50%">
+                                                        <TextField
+                                                            label="Postcode"
+                                                            value={storeInfo.postcode}
+                                                            onChange={handleStoreInfoChange('postcode')}
+                                                            placeholder="Value"
+                                                            autoComplete="off"
+                                                        />
+                                                    </Box>
+                                                    <Box width="50%">
+                                                        <TextField
+                                                            label="VAT number"
+                                                            value={storeInfo.vatNumber}
+                                                            onChange={handleStoreInfoChange('vatNumber')}
+                                                            placeholder="Value"
+                                                            autoComplete="off"
+                                                        />
+                                                    </Box>
+                                                </InlineStack>
+                                            </BlockStack>
+                                        </Box>
+                                    </Card>
+                                </div>
                             </Layout.AnnotatedSection>
                         </Layout>
 
@@ -462,14 +475,16 @@ const SettingsPage: React.FC = () => {
                         {/* Print Settings Card */}
                         <Layout>
                             <Layout.Section variant='oneThird'>
-                                <TextContainer>
-                                    <Text id="storeDetails" variant="headingMd" as="h2">
-                                        Add a Print Invoice Button to Shopify
-                                    </Text>
-                                    <Text tone="subdued" as="p">
-                                        This allows you to preview and print invoices on the Shopify admin order page, and your customers can do the same on their order status page.
-                                    </Text>
-                                </TextContainer>
+                                <div ref={printButtonRef} id="print-button-section">
+                                    <TextContainer>
+                                        <Text id="storeDetails" variant="headingMd" as="h2">
+                                            Add a Print Invoice Button to Shopify
+                                        </Text>
+                                        <Text tone="subdued" as="p">
+                                            This allows you to preview and print invoices on the Shopify admin order page, and your customers can do the same on their order status page.
+                                        </Text>
+                                    </TextContainer>
+                                </div>
                             </Layout.Section>
                             <Layout.Section>
                                 <Card>
@@ -529,78 +544,43 @@ const SettingsPage: React.FC = () => {
                                 title="Shopify email notification"
                                 description="Insert a download link for PDF invoice in your Shopify order email notification"
                             >
-                                <Card>
-                                    <Box paddingBlock="400" paddingInline="500">
-                                        <BlockStack gap="400">
-                                            <Select
-                                                label="Default PDF template for email notification"
-                                                options={templateOptions}
-                                                value={notificationSettings.defaultEmailTemplate}
-                                                onChange={handleNotificationSettingChange('defaultEmailTemplate')}
-                                                placeholder="Value"
-                                            />
-                                            <TextField
-                                                label="Download text"
-                                                value={notificationSettings.downloadText}
-                                                onChange={handleNotificationSettingChange('downloadText')}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                            />
-                                            <TextField
-                                                id="setting_variables"
-                                                label="Copy code"
-                                                value={notificationSettings.code}
-                                                onChange={handleNotificationSettingChange('code')}
-                                                autoComplete="off"
-                                                readOnly
-                                                labelAction={{
-                                                    content: 'Copy to clipboard',
-                                                    onAction: copyToClipboard
-                                                }}
-                                            />
-                                            <Button
-                                                variant="primary" 
-                                                onClick={() => window.open('https://admin.shopify.com/store/pdf-trest/email_templates/order_invoice/preview', '_blank')}
-                                            >
-                                                Edit Order Notification in Shopify
-                                            </Button>
-                                        </BlockStack>
-                                    </Box>
-                                </Card>
-                            </Layout.AnnotatedSection>
-                        </Layout>
-
-                        <Layout>
-                            <Layout.AnnotatedSection>
-                                <Card>
-                                    <Box>
-                                        <Button
-                                            onClick={toggleInstructions}
-                                            icon={InfoIcon}
-                                            variant="plain"
-                                            disclosure={isInstructionsOpen ? 'up' : 'down'}
-                                        >
-                                            How to insert code in Shopify email notification
-                                        </Button>
-                                        <Collapsible
-                                            open={isInstructionsOpen}
-                                            id="how-to-insert-code"
-                                            transition={{ duration: '150ms' }}
-                                        >
-                                            <Box paddingBlockStart="400">
-                                                <BlockStack gap="300">
-                                                    <List type="number">
-                                                        <List.Item>Select a template and personalize the download link text for your Shopify email notifications.</List.Item>
-                                                        <List.Item>Copy the provided code</List.Item>
-                                                        <List.Item>Navigate to your Shopify store settings notifications and insert code into your email notification</List.Item>
-                                                    </List>
-                                                </BlockStack>
-                                            </Box>
-                                        </Collapsible>
-
-
-                                    </Box>
-                                </Card>
+                                <div ref={emailNotificationRef} id="email-notification-section">
+                                    <Card>
+                                        <Box paddingBlock="400" paddingInline="500">
+                                            <BlockStack gap="400">
+                                                <Select
+                                                    label="Default PDF template for email notification"
+                                                    options={templateOptions}
+                                                    value={notificationSettings.defaultEmailTemplate}
+                                                    onChange={handleNotificationSettingChange('defaultEmailTemplate')}
+                                                    placeholder="Value"
+                                                />
+                                                <TextField
+                                                    label="Download text"
+                                                    value={notificationSettings.downloadText}
+                                                    onChange={handleNotificationSettingChange('downloadText')}
+                                                    placeholder="Value"
+                                                    autoComplete="off"
+                                                />
+                                                <TextField
+                                                    id="setting_variables"
+                                                    label="Copy code"
+                                                    value={notificationSettings.code}
+                                                    onChange={handleNotificationSettingChange('code')}
+                                                    autoComplete="off"
+                                                    readOnly
+                                                    labelAction={{
+                                                        content: 'Copy to clipboard',
+                                                        onAction: copyToClipboard
+                                                    }}
+                                                />
+                                                <InlineStack gap="200">
+                                                    <Text as="p" variant="bodyMd">Insert code into Order Confirmation Email</Text>
+                                                </InlineStack>
+                                            </BlockStack>
+                                        </Box>
+                                    </Card>
+                                </div>
                             </Layout.AnnotatedSection>
                         </Layout>
 
@@ -610,31 +590,33 @@ const SettingsPage: React.FC = () => {
                                 title="Customize invoice number"
                                 description="Use a custom invoice number instead of the default Shopify order number"
                             >
-                                <Card>
-                                    <Box paddingBlock="400" paddingInline="500">
-                                        <BlockStack gap="400">
-                                            <TextField
-                                                label="The first invoice number"
-                                                value={invoiceNumberSettings.firstInvoiceNumber}
-                                                onChange={handleInvoiceNumberSettingChange('firstInvoiceNumber')}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                            />
+                                <div ref={invoiceNumberRef} id="invoice-number-section">
+                                    <Card>
+                                        <Box paddingBlock="400" paddingInline="500">
+                                            <BlockStack gap="400">
+                                                <TextField
+                                                    label="The first invoice number"
+                                                    value={invoiceNumberSettings.firstInvoiceNumber}
+                                                    onChange={handleInvoiceNumberSettingChange('firstInvoiceNumber')}
+                                                    placeholder="Value"
+                                                    autoComplete="off"
+                                                />
 
-                                            <BlockStack gap="300">
-                                                <Text as="p" variant="bodyMd">Example: If you set the first invoice number as 003, start counting from the first Shopify order (#1001)</Text>
-                                                <Box paddingInline="500">
-                                                    <BlockStack gap="100">
-                                                        <Text as="p" variant="bodyMd">#1001 - #003</Text>
-                                                        <Text as="p" variant="bodyMd">#1002 - #004</Text>
-                                                        <Text as="p" variant="bodyMd">#1003 - #005</Text>
-                                                    </BlockStack>
-                                                </Box>
-                                                <Text as="p" variant="bodyMd">#003 will appear on PDF invoice instead of #1001 if you insert "Custom Invoice Number" variable on your invoice template</Text>
+                                                <BlockStack gap="300">
+                                                    <Text as="p" variant="bodyMd">Example: If you set the first invoice number as 003, start counting from the first Shopify order (#1001)</Text>
+                                                    <Box paddingInline="500">
+                                                        <BlockStack gap="100">
+                                                            <Text as="p" variant="bodyMd">#1001 - #003</Text>
+                                                            <Text as="p" variant="bodyMd">#1002 - #004</Text>
+                                                            <Text as="p" variant="bodyMd">#1003 - #005</Text>
+                                                        </BlockStack>
+                                                    </Box>
+                                                    <Text as="p" variant="bodyMd">#003 will appear on PDF invoice instead of #1001 if you insert "Custom Invoice Number" variable on your invoice template</Text>
+                                                </BlockStack>
                                             </BlockStack>
-                                        </BlockStack>
-                                    </Box>
-                                </Card>
+                                        </Box>
+                                    </Card>
+                                </div>
                             </Layout.AnnotatedSection>
                         </Layout>
                     </BlockStack>

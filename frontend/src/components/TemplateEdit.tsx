@@ -573,43 +573,43 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
           }}
           size='large'
         >
-          <Modal.Section>
-            <TextContainer>
-              <Text as='p'>Search and click on a variable to copy it to clipboard</Text>
-            </TextContainer>
-            
-            <Box paddingBlockEnd="400" paddingBlockStart="200">
-              <TextField
-                label="Search variables"
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Start typing to search..."
-                prefix={<Icon source={SearchIcon} />}
-                autoComplete="off"
-              />
-            </Box>
-            
-            <Scrollable style={{ height: '400px' }}>
-              {filteredVariables.map((category) => (
-                category.options.length > 0 && (
-                  <Box key={category.title} paddingBlockEnd="400">
-                    <Text variant="headingMd" as="h2">{category.title}</Text>
-                    <InlineStack gap="400" wrap={false}>
-                      {category.options.map((item) => (
-                        <Button 
-                          key={item.value} 
-                          onClick={() => handleVariableSelect(item.value)}
-                          fullWidth
-                        >
-                          {item.string}
-                        </Button>
-                      ))}
-                    </InlineStack>
-                  </Box>
-                )
-              ))}
-            </Scrollable>
-          </Modal.Section>
+            <Modal.Section>
+              <TextContainer>
+                <Text as='p'>Search and click on a variable to copy it to clipboard</Text>
+              </TextContainer>
+              
+              <Box paddingBlockEnd="400" paddingBlockStart="200">
+                <TextField
+                  label="Search variables"
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Start typing to search..."
+                  prefix={<Icon source={SearchIcon} />}
+                  autoComplete="off"
+                />
+              </Box>
+              
+              <Scrollable style={{ height: '60rem' }}>
+                {filteredVariables.map((category) => (
+                  category.options.length > 0 && (
+                    <Box key={category.title} paddingBlockEnd="400">
+                      <Text variant="headingMd" as="h2">{category.title}</Text>
+                      <InlineStack gap="400" wrap={false}>
+                        {category.options.map((item) => (
+                          <Button 
+                            key={item.value} 
+                            onClick={() => handleVariableSelect(item.value)}
+                            fullWidth
+                          >
+                            {item.string}
+                          </Button>
+                        ))}
+                      </InlineStack>
+                    </Box>
+                  )
+                ))}
+              </Scrollable>
+            </Modal.Section>
         </Modal>
 
         {/* Toast notification */}

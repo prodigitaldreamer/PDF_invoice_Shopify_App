@@ -403,7 +403,10 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   };
 
   const handleDuplicateTemplate = (id: string) => {
-    templateAction('/pdf/template/duplicate', { ids: [id] }, 'Template duplicated successfully');
+    templateAction('/pdf/template/duplicate', { 
+      ids: [id],
+      shop: config?.info?.shop 
+    }, 'Template duplicated successfully');
     setActivePopoverId(null);
   };
 
@@ -549,10 +552,14 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   const handleConfirmDelete = () => {
     const idsToDelete = selectedResources.length ? selectedResources : itemToDelete;
     templateAction('/pdf/template/delete', { 
-      ids: idsToDelete, 
-      shop: config?.info?.shop 
+      ids: idsToDelete,
+      shop: config?.info?.shop
     }, 'Template deleted successfully');
     appBridge.modal.hide(DELETE_MODAL_ID);
+
+    // Clear selections after delete
+    setSelectedResources([]);
+    setItemToDelete([]);
   };
 
   return (

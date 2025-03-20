@@ -918,7 +918,7 @@ class PdfReportController(http.Controller):
         }
         return request.make_response((json.dumps(error)), headers=[('Content-Type', 'application/json; charset=utf-8')])
 
-    @http.route('/pdfs/print/<int:template_id>/<int:order_id>/<int:order_number>', type='http', auth="public",
+    @http.route('/pdf/print/<int:template_id>/<int:order_id>/<int:order_number>', type='http', auth="public",
                 save_session=False)
     def email_notification_pdf(self, template_id=None, order_id=None, order_number=None):
         try:
@@ -957,6 +957,61 @@ class PdfReportController(http.Controller):
                     image_data = self.get_image_data(orders=orders, shop=session['shop'], template=templates)
                     merged_pdf = session['shop'].get_pdf(templates=templates, orders=orders, image_data=image_data,
                                                          type=templates.type)
+                    pdfhttpheaders = [
+                        ('Content-Type', 'application/pdf'),
+                        # ('Content-Length', len(pdf_content)),
+                        ('Content-Disposition', mode + '; filename=' + file_name + '.pdf'),
+                        ('Content-Security-Policy', "frame-ancestors https://" + request.params['shop'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"),
+                    ]
+                    shopify.ShopifyResource.clear_session()
+                    response = request.make_response(merged_pdf, headers=pdfhttpheaders)
+                    return response
+            else:
+                self.create_shop_log(log=str(order_id) + str(templates), shop=params['shop'])
+        except Exception as e:
+            shop = None
+            if 'shop' in request.params:
+                shop = request.params['shop']
+            self.create_shop_log(log=traceback.format_exc(), shop=shop)
+            _logger.error(traceback.format_exc())
+            message = 'Error!'
+        shopify.ShopifyResource.clear_session()
+        error = {
+            'code': 200,
+            'message': message,
+        }
+        return request.make_response((json.dumps(error)), headers=[('Content-Type', 'application/json; charset=utf-8')])
+
+    @http.route('/pdf/theme/print/<string:type>/<int:order_id>', type='http', auth="public",
+                save_session=False)
+    def pdf_download_order_history(self, type=None, order_id=None):
+        try:
+            params = request.params
+            shop = ''
+            if 'shop' in request.params:
+                shop = request.params['shop']
+            session = self.start_shopify_session(shop=shop)
+
+            order_id = int(int(order_id) / 78) if order_id else None
+            templates = session['shop'].templates.filtered(lambda t: t.type == type and t.active)
+            # done stupid code
+            orders = []
+            message = 'Error!'
+            if order_id is not None and templates:
+                order = shopify.Order.find(id_=order_id)
+                if not order:
+                    message = 'Order not found !'
+                check_order = False
+                if order:
+                    check_order = True
+                if check_order:
+                    orders.append(order)
+                    file_name = re.sub('[^A-Za-z0-9]+', '', 'Order_' + str(order.attributes.get('name')))
+                    # mode = 'attachment'
+                    mode = 'inline'
+                    image_data = self.get_image_data(orders=orders, shop=session['shop'], template=templates)
+                    merged_pdf = session['shop'].get_pdf(templates=templates, orders=orders, image_data=image_data,
+                                                        type=templates.type)
                     pdfhttpheaders = [
                         ('Content-Type', 'application/pdf'),
                         # ('Content-Length', len(pdf_content)),

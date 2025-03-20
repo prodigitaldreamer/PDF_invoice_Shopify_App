@@ -1,1 +1,0 @@
-window.hapo = 2

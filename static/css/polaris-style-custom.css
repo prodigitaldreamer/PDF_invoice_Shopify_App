@@ -1,3 +1,5 @@
-.Polaris-Box{
-    --pc-box-min-height:initial !important;
+@media (min-width: 65em) {
+    .Polaris-Modal-Dialog__Modal.Polaris-Modal-Dialog--sizeLarge {
+        max-width: 100rem !important;
+    }
 }
