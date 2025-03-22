@@ -389,6 +389,42 @@ class Main(http.Controller):
             _logger.error(traceback.format_exc())
             return self.render_exception()
 
+    @http.route('/pdf/email_notif', type='http', auth='public', save_session=False)
+    def email_notification(self):
+        try:
+            ensure_login()
+            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
+            value = {
+                'page': 'Email Notification',
+                'mode': 'set',
+                'template_info': {},
+                'all_templates': [],
+                'preview': {},
+                'live_support': True,
+                'list_apps': [],
+                'custom_fonts': [],
+                'current_plan': {},
+                'api_key': app_key,
+            }
+            shop = None
+            if 'shop_url_pdf' in request.session:
+                shop = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env).shop_model
+            if shop:
+                info, templates = self.get_value_setting(shop=shop)
+                value.update({
+                    'info': info,
+                    'templates': templates,
+                    'current_plan': shop.get_current_plan_data(),
+                    'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
+                })
+            headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
+                'shop_url_pdf'] + " https://admin.shopify.com;"}
+            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+        except Exception as e:
+            self.create_shop_log(log=traceback.format_exc())
+            _logger.error(traceback.format_exc())
+            return self.render_exception()
+
     @http.route('/pdf/accounts', type='http', auth='public', save_session=False)
     def accounts(self):
         try:

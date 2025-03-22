@@ -3,6 +3,7 @@ import { AppProvider, Link } from '@shopify/polaris';
 import '@shopify/polaris/build/esm/styles.css';
 import Home from './pages/Home.tsx';
 import SettingsPage from './pages/Setting.tsx';
+import EmailNotification from './pages/EmailNotification.tsx'
 import {NavMenu} from '@shopify/app-bridge-react';
 import TemplateManagementPage from './pages/SettingTemplate.tsx';
 import TemplateView from './components/TemplateView.tsx';
@@ -101,6 +102,9 @@ const App: React.FC = () => {
                 handleNavigation('/pdf/templates/edit', { id });
             }} />;
         }
+        if (path === '/pdf/email_notif') {
+            return <EmailNotification />;
+        }
         if (path === '/pdf/templates/edit' && templateId) {
             // If editor is open, render the TemplateEdit component instead of TemplateView
             if (isEditorOpen) {
@@ -130,6 +134,8 @@ const App: React.FC = () => {
                 <Link url="/" onClick={() => handleNavigation('/')}>Home</Link>
                 <Link url="/pdf/templates" onClick={() => handleNavigation('/pdf/templates')}>Template Management</Link>
                 <Link url="/pdf/settings" onClick={() => handleNavigation('/pdf/settings')}>Setting</Link>
+
+                <Link url="/pdf/email_notif" onClick={() => handleNavigation('/pdf/email_notif')}>Email Notification</Link>
             </NavMenu>
             {renderComponent()}
         </AppProvider>
