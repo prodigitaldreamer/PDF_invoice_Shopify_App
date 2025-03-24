@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "b532f4655dbba6b411aa1b704520ed69"
-application_url = "https://bacon-jpeg-ancient-cat.trycloudflare.com/shopify/pdf"
+application_url = "https://that-programmers-gc-introduce.trycloudflare.com/shopify/pdf"
 embedded = true
 name = "PDF_APP_v2"
 handle = "pdf_app_v2"
@@ -13,12 +13,12 @@ include_config_on_deploy = true
 api_version = "2025-01"
 
 [auth]
-redirect_urls = [ "https://bacon-jpeg-ancient-cat.trycloudflare.com/shopify/pdf/auth" ]
+redirect_urls = [ "https://that-programmers-gc-introduce.trycloudflare.com/shopify/pdf/auth" ]
 
 [pos]
 embedded = false
 
 [app_proxy]
-url = "https://bacon-jpeg-ancient-cat.trycloudflare.com"
+url = "https://that-programmers-gc-introduce.trycloudflare.com"
 subpath = "order-printer"
 prefix = "apps"

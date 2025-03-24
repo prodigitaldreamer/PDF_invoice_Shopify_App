@@ -230,7 +230,7 @@ export const HomeSetup: React.FC = () => {
           <Box>
             <div style={{ width: '50%' }}>
               <InlineStack wrap={false} blockAlign='center' gap="400">
-                <Text as="p" variant="bodyMd">{`Step ${completedTasks} of ${tasks.length} tasks complete`}</Text>
+                <Text as="p" variant="bodyMd">{`Step ${completedTasks}  of ${tasks.length}  tasks complete`}</Text>
                 <div style={{ flex: 1 }}>
                   <ProgressBar size='small' progress={progressPercentage} />
                 </div>

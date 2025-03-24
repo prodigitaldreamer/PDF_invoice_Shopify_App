@@ -672,6 +672,78 @@ class Main(http.Controller):
             _logger.error(traceback.format_exc())
             return [False, {}]
 
+    @http.route('/pdf/set_default_templates', type='json', auth='public', csrf=False, save_session=False)
+    def set_default_templates(self):
+        try:
+            ensure_login()
+            Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
+            shop_model = Shopify.shop_model
+            params = json.loads(request.httprequest.data).get('data')
+            
+            if not params or not params.get('templates') or not isinstance(params.get('templates'), list):
+                return {
+                    'status': False,
+                    'message': 'Invalid template data provided'
+                }
+                
+            template_model = request.env['shopify.pdf.shop.template'].sudo()
+            templates_to_set = params.get('templates')
+            
+            # Group templates by type to handle defaults for each type
+            templates_by_type = {}
+            for template_data in templates_to_set:
+                template_id = shop_model.decode(int(template_data.get('id')))
+                template_type = template_data.get('type', 'invoice')
+                
+                if template_type not in templates_by_type:
+                    templates_by_type[template_type] = []
+                templates_by_type[template_type].append(template_id)
+            
+            # Process each type group
+            for template_type, template_ids in templates_by_type.items():
+                # First, unset default for all templates of this type
+                all_templates_of_type = template_model.search([
+                    ('shop_id', '=', shop_model.id),
+                    ('type', '=', template_type)
+                ])
+                
+                for template in all_templates_of_type:
+                    template.sudo().write({'default': False})
+                
+                # Now set default for the selected templates
+                for template_id in template_ids:
+                    template = template_model.search([
+                        ('id', '=', template_id),
+                        ('shop_id', '=', shop_model.id)
+                    ], limit=1)
+                    
+                    if template:
+                        template.sudo().write({'default': True})
+            
+            # Update shop settings if needed (for backward compatibility)
+            if 'invoice' in templates_by_type and templates_by_type['invoice']:
+                # Just use the first invoice template as the main default
+                main_default_id = templates_by_type['invoice'][0]
+                main_default_template = template_model.search([
+                    ('id', '=', main_default_id),
+                    ('shop_id', '=', shop_model.id)
+                ], limit=1)
+                
+                if main_default_template:
+                    shop_model.default_template = str(shop_model.encode(main_default_template.id))
+            
+            return {
+                'status': True,
+                'message': 'Default templates updated successfully'
+            }
+        except Exception as e:
+            self.create_shop_log(log=traceback.format_exc())
+            _logger.error(traceback.format_exc())
+            return {
+                'status': False,
+                'message': 'Error updating default templates'
+            }
+
     def get_value_setting(self, shop):
         info = shop.get_shop_settings_info()
         templates = shop.get_shop_template()

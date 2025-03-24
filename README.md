@@ -5,6 +5,8 @@
   auto remove wkhtmltopdf 
   sudo apt install wkhtmltopdf
   set limit memory hard 2gb
+
+  install brew install coreutils for macos
   
 
 -- Create Action

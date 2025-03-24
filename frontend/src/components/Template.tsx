@@ -111,20 +111,24 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
           setTemplates(response.data.result.templates);
         }
         
-        setToastMessage(message);
+        shopify.toast.show(message, {
+          duration: 1500,
+        });
         setToastActive(true);
       } else {
-        setToastMessage('Something went wrong. Please try again!');
+        shopify.toast.show(response.data.message || 'Failed to perform action', {
+          duration: 5000,
+          isError: true,
+        });
         setToastActive(true);
       }
     } catch (error) {
-      setToastMessage('Something went wrong. Please try again!');
+      shopify.toast.show( 'Failed to perform action', {
+          duration: 5000,
+          isError: true,
+        });
       setToastActive(true);
-    } finally {
-      setLoading(false);
-      setSelectedResources([]);
-      setItemToDelete([]);
-    }
+    } 
   };
   
   // Delete view functionality
@@ -410,16 +414,64 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
     setActivePopoverId(null);
   };
 
-  const handleSetAsDefault = (id: string) => {
-    const newTemplates = templates.map(template => ({
-      ...template,
-      default_set: String(template.id) === id
-    }));
-    
-    setTemplates(newTemplates);
-    setToastMessage('Template set as default');
-    setToastActive(true);
-    setActivePopoverId(null);
+  const handleSetAsDefault = async (id: string) => {
+    try {
+      setLoading(true);
+      // Find the template to determine its type
+      const templateToSet = templates.find(template => String(template.id) === id);
+      
+      if (!templateToSet) {
+        setToastMessage('Template not found');
+        setToastActive(true);
+        return;
+      }
+      
+      // Get shop from config
+      const shop = config?.info?.shop || '';
+      
+      // Prepare data for the API
+      const data = {
+        templates: [
+          {
+            id: id,
+            type: templateToSet.type
+          }
+        ],
+        shop: shop  // Add shop information to the request
+      };
+      
+      // Call the new API endpoint
+      const response = await axios.post('/pdf/set_default_templates', { data });
+      console.log('Response:', response);
+      
+      if (response.data.result.status) {
+        // Update the UI - set this template as default and others of same type as non-default
+        const newTemplates = templates.map(template => ({
+          ...template,
+          default_set: String(template.id) === id ? true : 
+                      (template.type === templateToSet.type ? false : template.default_set)
+        }));
+        
+        setTemplates(newTemplates);
+        shopify.toast.show('Template set as default successfully', {
+          duration: 5000,
+        });
+        setToastActive(true);
+      } else {
+        setToastMessage(response.data.message || 'Failed to set template as default');
+        shopify.toast.show('Failed to set template as default', {
+          duration: 5000,
+          isError: true
+        });
+        setToastActive(true);
+      }
+    } catch (error) {
+      setToastMessage('Error setting template as default');
+      setToastActive(true);
+    } finally {
+      setLoading(false);
+      setActivePopoverId(null);
+    }
   };
 
   const handleDeleteTemplate = (id: string) => {
@@ -430,35 +482,84 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
 
   // Resource selection state
   const resourceName = { singular: 'template', plural: 'templates' };
-  const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const {
-    selectedResources: selectedResourcesFromHook,
+    selectedResources,
     allResourcesSelected,
     handleSelectionChange
   } = useIndexResourceState(sortedTemplates, {
     resourceIDResolver: (template: TemplateData) => String(template.id)
   });
 
-  // Update the selectedResources state whenever the hook's selected resources change
-  useEffect(() => {
-    setSelectedResources(selectedResourcesFromHook);
-  }, [selectedResourcesFromHook]);
-
   // Bulk action handlers
-  const handleBulkSetDefault = useCallback(() => {
+  const handleBulkSetDefault = useCallback(async () => {
     if (selectedResources.length > 0) {
-      const id = selectedResources[0];
-      const newTemplates = templates.map(template => ({
-        ...template,
-        default_set: String(template.id) === id
-      }));
-      
-      setTemplates(newTemplates);
-      setToastMessage('Template set as default');
-      setToastActive(true);
-      setSelectedResources([]);
+      try {
+        setLoading(true);
+        
+        // Get shop from config
+        const shop = config?.info?.shop || '';
+        
+        // Group selected templates by type to avoid conflicts
+        const selectedTemplatesByType: Record<string, string> = {};
+        
+        // For each selected template, get its type
+        for (const id of selectedResources) {
+          const template = templates.find(t => String(t.id) === id);
+          if (template) {
+            // Group by type, taking only the first template of each type
+            if (!selectedTemplatesByType[template.type]) {
+              selectedTemplatesByType[template.type] = id;
+            }
+          }
+        }
+        
+        // Create data structure for API
+        const templateData = Object.entries(selectedTemplatesByType).map(([type, id]) => ({
+          id: id as string,
+          type
+        }));
+        
+        // Call the API with shop information
+        const response = await axios.post('/pdf/set_default_templates', { 
+          data: {
+            templates: templateData,
+            shop: shop  // Add shop information to the request
+          }
+        });
+        if (response.data.result.status) {
+          // Update UI - for each type, set the selected template as default
+          const newTemplates = [...templates];
+          
+          // First, mark all templates as non-default
+          for (const template of newTemplates) {
+            if (selectedTemplatesByType[template.type]) {
+              // If we have a default for this type
+              template.default_set = String(template.id) === selectedTemplatesByType[template.type];
+            }
+          }
+          
+          setTemplates(newTemplates);
+          shopify.toast.show('Templates set as default successfully', {
+            duration: 5000,
+          });
+          setToastActive(true);
+        } else {
+          shopify.toast.show('Failed to set templates as default', {
+            duration: 5000,
+          });
+          setToastActive(true);
+        }
+      } catch (error) {
+        shopify.toast.show('Error setting templates as default', {
+          duration: 5000,
+        });
+        setToastActive(true);
+      }finally {
+        setLoading(false);
+        setActivePopoverId(null);
+      }
     }
-  }, [selectedResources, templates]);
+  }, [selectedResources, templates, config?.info?.shop, handleSelectionChange]);
 
   const handleBulkDelete = useCallback(() => {
     appBridge.modal.show(DELETE_MODAL_ID);
@@ -488,7 +589,9 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
       
       if (response.data.result && response.data.result.status) {
         appBridge.modal.hide(REQUEST_FORM_MODAL_ID);
-        setToastMessage('Request submitted successfully');
+        shopify.toast.show('Request submitted successfully', {
+          duration: 5000,
+        });
         setToastActive(true);
         
         // Reset form
@@ -556,9 +659,6 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
       shop: config?.info?.shop
     }, 'Template deleted successfully');
     appBridge.modal.hide(DELETE_MODAL_ID);
-
-    // Clear selections after delete
-    setSelectedResources([]);
     setItemToDelete([]);
   };
 

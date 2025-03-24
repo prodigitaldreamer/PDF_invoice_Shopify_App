@@ -486,7 +486,7 @@ const SettingsPage: React.FC = () => {
                                     </TextContainer>
                                 </div>
                             </Layout.Section>
-                            <Layout.Section>
+                           <Layout.Section>
                                 <Card>
                                     <BlockStack gap="200">
                                         <Text as="p" variant="bodyMd">
@@ -502,54 +502,53 @@ const SettingsPage: React.FC = () => {
                                     </BlockStack>
                                 </Card>
                             </Layout.Section>
+                           
+                        </Layout>
+                       <Layout>
+                            <Layout.AnnotatedSection>
+                                <Card>
+                                        <BlockStack gap="200">
+                                            <Text as="p" variant="bodyMd">
+                                                Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
+                                            </Text>
+                                            <Box>
+                                                <Button
+                                                    onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
+                                                >
+                                                    {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
+                                                </Button>
+                                            </Box>
+
+                                            <TextField
+                                                label="Print button label"
+                                                value={printSettings.printButtonLabel}
+                                                onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
+                                                placeholder="Value"
+                                                autoComplete="off"
+                                            />
+                                            <Select
+                                                label="Default print invoice template for customer"
+                                                options={templateOptions}
+                                                value={printSettings.defaultTemplate}
+                                                onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
+                                                placeholder="Value"
+                                            />
+                                        </BlockStack>
+                                    </Card>
+                            </Layout.AnnotatedSection>
                         </Layout>
 
                         <Layout>
                             <Layout.AnnotatedSection>
-                                <Card>
-                                    <BlockStack gap="200">
-                                        <Text as="p" variant="bodyMd">
-                                            Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
+                            <div ref={emailNotificationRef} id="email-notification-section">
+                                    <Card >
+                                        <Text as = "p" variant = "bodyMd">
+                                            Printting on Customer Order List Page
                                         </Text>
-                                        <Box>
-                                            <Button
-                                                onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
-                                            >
-                                                {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
-                                            </Button>
-                                        </Box>
-
-                                        <TextField
-                                            label="Print button label"
-                                            value={printSettings.printButtonLabel}
-                                            onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                        />
-                                        <Select
-                                            label="Default print invoice template for customer"
-                                            options={templateOptions}
-                                            value={printSettings.defaultTemplate}
-                                            onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
-                                            placeholder="Value"
-                                        />
-                                    </BlockStack>
-                                </Card>
-                            </Layout.AnnotatedSection>
-                        </Layout>
-
-                        {/* Notification Settings Card */}
-                        <Layout>
-                            <Layout.AnnotatedSection
-                                title="Shopify email notification"
-                                description="Insert a download link for PDF invoice in your Shopify order email notification"
-                            >
-                                <div ref={emailNotificationRef} id="email-notification-section">
-                                    <Card>
-                                        <Box paddingBlock="400" paddingInline="500">
+                                        <Box paddingBlockStart="300">
                                             <BlockStack gap="400">
                                                 <Select
-                                                    label="Default PDF template for email notification"
+                                                    label="Default print invoice template for customer"
                                                     options={templateOptions}
                                                     value={notificationSettings.defaultEmailTemplate}
                                                     onChange={handleNotificationSettingChange('defaultEmailTemplate')}
@@ -574,9 +573,6 @@ const SettingsPage: React.FC = () => {
                                                         onAction: copyToClipboard
                                                     }}
                                                 />
-                                                <InlineStack gap="200">
-                                                    <Text as="p" variant="bodyMd">Insert code into Order Confirmation Email</Text>
-                                                </InlineStack>
                                             </BlockStack>
                                         </Box>
                                     </Card>

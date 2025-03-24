@@ -133,9 +133,8 @@ const App: React.FC = () => {
             <NavMenu>
                 <Link url="/" onClick={() => handleNavigation('/')}>Home</Link>
                 <Link url="/pdf/templates" onClick={() => handleNavigation('/pdf/templates')}>Template Management</Link>
-                <Link url="/pdf/settings" onClick={() => handleNavigation('/pdf/settings')}>Setting</Link>
-
                 <Link url="/pdf/email_notif" onClick={() => handleNavigation('/pdf/email_notif')}>Email Notification</Link>
+                <Link url="/pdf/settings" onClick={() => handleNavigation('/pdf/settings')}>Setting</Link>
             </NavMenu>
             {renderComponent()}
         </AppProvider>

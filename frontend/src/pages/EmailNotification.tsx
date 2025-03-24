@@ -32,6 +32,7 @@ interface StoreInformation {
     email_notify_template: string;
     invoice_start_number: string;
     front_button_label: string;
+    shop_url: string;
 }
 
 interface PrintSettings {
@@ -74,6 +75,7 @@ const EmailNotification: React.FC = () => {
         email_notify_template: '',
         invoice_start_number: '',
         front_button_label: '',
+        shop_url: '',
     });
     console.log(storeInfo);
     // Print settings state
@@ -101,7 +103,7 @@ const EmailNotification: React.FC = () => {
     // Templates for the dropdown
     const templateOptions = React.useMemo(() => {
         if (!config?.templates) return [{label: "Please choose template", value: ""}];
-
+        
         return [
             {label: "Please choose template", value: ""},
             ...config.templates.map(template => ({
@@ -170,6 +172,7 @@ const EmailNotification: React.FC = () => {
                 email_notify_template: info.email_notify_template || '',
                 invoice_start_number: info.invoice_start_number || '',
                 front_button_label: info.front_button_label || '',
+                shop_url: config.shop_url || '',
 
             });
 
@@ -238,11 +241,11 @@ const EmailNotification: React.FC = () => {
 
     // Create email link generator function similar to _email_link_download
     const generateEmailLinkCode = useCallback((template: string, text: string) => {
-        return `<a target="_blank" href="{{ shop.url }}/apps/pdf-invoice/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
+        return `<a target="_blank" href="{{ shop.url }}/apps/order-printer/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
     }, []);
 
     // Collapsible state
-    const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
+    const [isInstructionsOpen, setIsInstructionsOpen] = useState(true);
 
     // Toggle instructions
     const toggleInstructions = useCallback(() => {
@@ -440,22 +443,22 @@ const EmailNotification: React.FC = () => {
                                                     onAction: copyToClipboard
                                                 }}
                                             />
-                                            <Box>
-                                                <InlineStack gap="500" wrap={false}>
-                                                    <Box width="50%">
+                                            <InlineStack gap="500" wrap={false} blockAlign='center'>
+
                                                         <Text as="span" fontWeight='bold'>
                                                             Insert code into Order Confirmation Email
                                                         </Text>
-                                                    </Box>
-                                                    <Box width="50%">
+
                                                         <Button
-                                                            onClick={() => window.open('', '_blank')}
+                                                             onClick={() => {
+                                                                // Format the shop URL properly and navigate to notifications settings
+                                                                const notificationsUrl = `https://admin.shopify.com/settings/notifications/customer`;
+                                                                window.open(notificationsUrl, '_blank');
+                                                            }}
                                                         >
                                                             Go to Settings
                                                         </Button>
-                                                    </Box>
                                                 </InlineStack>
-                                            </Box>
                                         </BlockStack>
                                     </Box>
                                 </Card>
