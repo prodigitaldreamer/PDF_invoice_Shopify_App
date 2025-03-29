@@ -389,7 +389,7 @@ class Main(http.Controller):
             _logger.error(traceback.format_exc())
             return self.render_exception()
 
-    @http.route('/pdf/email_notif', type='http', auth='public', save_session=False)
+    @http.route('/pdf/email_notification', type='http', auth='public', save_session=False)
     def email_notification(self):
         try:
             ensure_login()

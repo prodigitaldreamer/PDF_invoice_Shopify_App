@@ -422,7 +422,7 @@ const EmailNotification: React.FC = () => {
                                                 options={templateOptions}
                                                 value={notificationSettings.defaultEmailTemplate}
                                                 onChange={handleNotificationSettingChange('defaultEmailTemplate')}
-                                                placeholder="Value"
+                                                placeholder="Select a template"
                                             />
                                             <TextField
                                                 label="Download text"

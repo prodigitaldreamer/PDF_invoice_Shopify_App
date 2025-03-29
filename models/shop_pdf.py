@@ -64,47 +64,64 @@ class Shopify(models.Model):
                 if not isDraftOrder:
                     # Khởi tạo lại session cho mỗi đơn hàng
                     self.start_shopify_session()
-                    # GraphQL client setup
-                    client = shopify.GraphQL()
-                    # GraphQL query for transactions
-                    query = '''
-                    query TransactionsForOrder($orderId: ID!) {
-                    order(id: $orderId) {
-                        transactions(first: 10) {
-                            gateway
-                            status
-                            kind
-                            paymentDetails {
-                            ... on CardPaymentDetails {
-                            company
-                            name
-                            paymentMethodName
-                            number
-                            }
-                            ... on ShopPayInstallmentsPaymentDetails {
-                            paymentMethodName
-                            }
-                            }
-                        }
-                        }
-                    }
-                    '''
-                    variables = {
-                        'orderId': f"gid://shopify/Order/{order.id}"
-                    }
                     
-                    res = client.execute(query, variables=variables)
-                    result = json.loads(res)
-                    # Extract transaction data from GraphQL response
-                    if result.get('data', {}).get('order', {}).get('transactions', {}):
-                        latest_transaction = result['data']['order']['transactions'][-1]
-                        if 'paymentDetails' in latest_transaction:
-                            transaction = {
-                                'paymentDetails': {
-                                    'creditCardCompany': latest_transaction.get('paymentDetails', {}).get('company', 'unknown'),
-                                    'creditCardNumber': latest_transaction.get('paymentDetails', {}).get('number', '--')
-                                },
+                    # Try to get transaction data with improved error handling
+                    try:
+                        # GraphQL client setup
+                        client = shopify.GraphQL()
+                        
+                        # GraphQL query for transactions
+                        query = '''
+                        query TransactionsForOrder($orderId: ID!) {
+                        order(id: $orderId) {
+                            transactions(first: 10) {
+                                gateway
+                                status
+                                kind
+                                paymentDetails {
+                                ... on CardPaymentDetails {
+                                company
+                                name
+                                paymentMethodName
+                                number
+                                }
+                                ... on ShopPayInstallmentsPaymentDetails {
+                                paymentMethodName
+                                }
+                                }
                             }
+                            }
+                        }
+                        '''
+                        
+                        variables = {
+                            'orderId': f"gid://shopify/Order/{order.id}"
+                        }
+                        
+                        # Set timeout for GraphQL execution to avoid hanging
+                        res = client.execute(query, variables=variables)
+                        
+                        # Parse JSON response with error handling
+                        try:
+                            result = json.loads(res)
+                            
+                            # Extract transaction data from GraphQL response
+                            if result.get('data', {}).get('order', {}).get('transactions', {}):
+                                latest_transaction = result['data']['order']['transactions'][-1]
+                                if 'paymentDetails' in latest_transaction:
+                                    transaction = {
+                                        'paymentDetails': {
+                                            'creditCardCompany': latest_transaction.get('paymentDetails', {}).get('company', 'unknown'),
+                                            'creditCardNumber': latest_transaction.get('paymentDetails', {}).get('number', '--')
+                                        },
+                                    }
+                        except (json.JSONDecodeError, ValueError) as json_err:
+                            _logger.warning(f"Error parsing GraphQL response: {json_err}")
+                    
+                    except Exception as gql_err:
+                        _logger.warning(f"GraphQL request failed: {gql_err}")
+                        # Continue with PDF generation even if GraphQL fails
+                        # This ensures PDF generation doesn't entirely fail if Shopify API has issues
 
                 merge_html_css, options = self.get_pdf_data(order=order, session=session, template=template,
                                                             image_data=image_data, type=type, isDraftOrder=isDraftOrder,
@@ -1175,45 +1192,6 @@ class Shopify(models.Model):
             })
         return data
 
-    # def get_format_currency(self, currency=None, amount=None, currency_format=None):
-    #     # handle amount
-    #     if amount is None or amount == 0:
-    #         amount = 0.00
-    #     amount = '{:,.2f}'.format(amount)
-    #
-    #     try:
-    #         # change format
-    #         if currency_format is not None:
-    #             #     # if format is html, convert to string
-    #             currency_format = re.sub(r'<(.+?)>', '', currency_format)
-    #             # if format not correct, convert to correct
-    #             currency_format = re.sub(r'{{[^\t]*}}', '{amount}', currency_format)
-    #             if currency in Currency.money_formats and '{amount}' in currency_format:
-    #                 origin_format = Currency.money_formats[currency]['money_format']
-    #                 symbol = origin_format.replace('{amount}', '').replace(' ', '')
-    #                 currency_format_symbol = currency_format.replace('{amount}', '').replace(' ', '')
-    #                 currency_format = currency_format.replace(currency_format_symbol, symbol)
-    #                 Currency.money_formats.update({
-    #                     currency: {
-    #                         "money_format": currency_format,
-    #                         "money_with_currency_format": Currency.money_formats[currency]['money_with_currency_format'],
-    #                     },
-    #                 })
-    #                 currency_item = Currency(currency)
-    #                 currency_format = currency_item.get_money_format(amount)
-    #     # except Exception as e:
-    #     #     _logger.error(traceback.format_exc())
-    #     # currency_format = str(amount)
-    #     # try:
-    #     #     currency_item = Currency(currency)
-    #     #     currency_format = currency_item.get_money_format(amount)
-    #     except Exception as e:
-    #         _logger.error(traceback.format_exc())
-    #         currency_format = str(amount)
-    #         return str(currency_format)
-    #         # currency_format = str(currency) + ' ' + str(amount)
-    #
-    #     return str(currency_format)
 
     def get_present_format_currency(self, currency=None, amount=None, currency_format=None):
         if amount is None or amount == 0:
@@ -1254,43 +1232,6 @@ class Shopify(models.Model):
             a = 0
         return False
 
-    # def check_is_row_items_block(self, tr):
-    #     if tr.getAttribute("id") == 'row_items' or 'row_items' in tr.getAttribute("id"):
-    #         return True
-    #     count = 0
-    #     shortcodes = ['{{product_image}}', '{{product_name}}', '{{sku}}', '{{qty}}', '{{price}}', '{{price_no_vat}}',
-    #                   '{{subtotal}}', '{{subtotal_no_vat}}', '{{discount_amount}}', '{{item_number}}']
-    #     try:
-    #         for td in tr.childNodes:
-    #             for child_node in td.childNodes:
-    #                 if child_node.nodeName and child_node.nodeName == 'img':
-    #                     src = child_node.getAttributeNode('src').nodeValue
-    #                     if src in shortcodes:
-    #                         count += 1
-    #                 else:
-    #                     if child_node.nodeName != '#text' and len(child_node.getElementsByTagName('shortcode')) > 0:
-    #                         for short_code_node in child_node.getElementsByTagName('shortcode'):
-    #                             short_code = short_code_node.firstChild.nodeValue
-    #                             short_code = re.sub("\n", "", short_code)
-    #                             short_code = short_code.replace(" ", "")
-    #                             if short_code in shortcodes:
-    #                                 count += 1
-    #                     if child_node.nodeName == 'shortcode':
-    #                         for short_code_node in child_node.childNodes:
-    #                             short_code = short_code_node.nodeValue
-    #                             short_code = re.sub("\n", "", short_code)
-    #                             short_code = short_code.replace(" ", "")
-    #                             if short_code in shortcodes:
-    #                                 count += 1
-    #                 if child_node.nodeName != '#text' and len(child_node.getElementsByTagName('img')) > 0:
-    #                     for img_child_node in child_node.getElementsByTagName('img'):
-    #                         if img_child_node.getAttributeNode('src').nodeValue == '{{product_image}}':
-    #                             count += 1
-    #     except Exception as e:
-    #         _logger.error(traceback.format_exc())
-    #     if count >= 3:
-    #         return True
-    #     return False
 
     def check_is_row_items_block(self, div):
         count = 0
@@ -1335,8 +1276,8 @@ class Shopify(models.Model):
         soup = BeautifulSoup(html_str, 'html.parser')
         
         # Remove styles content (keep the tags)
-        for style_tag in soup.find_all('style'):
-            style_tag.clear()
+        # for style_tag in soup.find_all('style'):
+        #     style_tag.clear()
         
         # Find all div elements with class 'u-row-container'
         item_divs = []

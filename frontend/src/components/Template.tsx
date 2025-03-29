@@ -128,7 +128,10 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
           isError: true,
         });
       setToastActive(true);
-    } 
+    } finally {
+        setLoading(false);
+        setActivePopoverId(null);
+      }
   };
   
   // Delete view functionality

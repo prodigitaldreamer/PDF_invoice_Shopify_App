@@ -107,15 +107,12 @@ const SettingsPage: React.FC = () => {
 
     // Templates for the dropdown
     const templateOptions = React.useMemo(() => {
-        if (!config?.templates) return [{ label: "Please choose template", value: "" }];
+        if (!config?.templates) return [];
         
-        return [
-            { label: "Please choose template", value: "" },
-            ...config.templates.map(template => ({
-                label: template.label,
-                value: template.value.toString()
-            }))
-        ];
+        return config.templates.map(template => ({
+            label: template.label,
+            value: template.value.toString()
+        }));
     }, [config]);
 
     // Load config data safely with interval check
@@ -391,7 +388,7 @@ const SettingsPage: React.FC = () => {
                             >
                                 <div ref={storeInfoRef} id="store-info-section">
                                     <Card>
-                                        <Box paddingBlock="400" paddingInline="500">
+                                        <Box paddingBlock="400">
                                             <BlockStack gap="400">
                                                 <TextField
                                                     label="Store Name"
@@ -531,7 +528,7 @@ const SettingsPage: React.FC = () => {
                                                 options={templateOptions}
                                                 value={printSettings.defaultTemplate}
                                                 onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
-                                                placeholder="Value"
+                                                placeholder="Select a template"
                                             />
                                         </BlockStack>
                                     </Card>
@@ -552,7 +549,7 @@ const SettingsPage: React.FC = () => {
                                                     options={templateOptions}
                                                     value={notificationSettings.defaultEmailTemplate}
                                                     onChange={handleNotificationSettingChange('defaultEmailTemplate')}
-                                                    placeholder="Value"
+                                                    placeholder="Select a template"
                                                 />
                                                 <TextField
                                                     label="Download text"
@@ -588,13 +585,13 @@ const SettingsPage: React.FC = () => {
                             >
                                 <div ref={invoiceNumberRef} id="invoice-number-section">
                                     <Card>
-                                        <Box paddingBlock="400" paddingInline="500">
+                                        <Box paddingBlock="400">
                                             <BlockStack gap="400">
                                                 <TextField
                                                     label="The first invoice number"
                                                     value={invoiceNumberSettings.firstInvoiceNumber}
                                                     onChange={handleInvoiceNumberSettingChange('firstInvoiceNumber')}
-                                                    placeholder="Value"
+                                                    placeholder="Invoice Number"
                                                     autoComplete="off"
                                                 />
 

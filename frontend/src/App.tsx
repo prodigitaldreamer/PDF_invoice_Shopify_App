@@ -102,7 +102,7 @@ const App: React.FC = () => {
                 handleNavigation('/pdf/templates/edit', { id });
             }} />;
         }
-        if (path === '/pdf/email_notif') {
+        if (path === '/pdf/email_notification') {
             return <EmailNotification />;
         }
         if (path === '/pdf/templates/edit' && templateId) {
@@ -133,7 +133,7 @@ const App: React.FC = () => {
             <NavMenu>
                 <Link url="/" onClick={() => handleNavigation('/')}>Home</Link>
                 <Link url="/pdf/templates" onClick={() => handleNavigation('/pdf/templates')}>Template Management</Link>
-                <Link url="/pdf/email_notif" onClick={() => handleNavigation('/pdf/email_notif')}>Email Notification</Link>
+                <Link url="/pdf/email_notification" onClick={() => handleNavigation('/pdf/email_notification')}>Email Notification</Link>
                 <Link url="/pdf/settings" onClick={() => handleNavigation('/pdf/settings')}>Setting</Link>
             </NavMenu>
             {renderComponent()}

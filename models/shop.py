@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+import traceback
 from datetime import datetime
 import shopify
 from odoo import models, fields, api
 from odoo.modules import get_module_resource
 from ..oauth2.auth import ShopifyHelper
-import logging, traceback
+import logging 
+
 _logger = logging.getLogger(__name__)
 
 
@@ -72,79 +74,142 @@ class Shopify(models.Model):
     check_custom_invoice_template = fields.Boolean(default=False)
 
     def get_data(self):
+        """
+        Fetch shop data from Shopify and configure webhooks
+        Returns: True if data fetched successfully, False otherwise
+        """
+        uninstall_wh = False
         try:
-            uninstall_wh = False
-            if self.token:
-                self.start_shopify_session()
-                shop = shopify.Shop.current()
-                if not self.email:
-                    self.email = shop.attributes.get('email')
-                if not self.country:
-                    self.country = shop.attributes.get('country_name')
-                existing_webhooks = shopify.Webhook.find()
-                if existing_webhooks:
-                    for webhook in existing_webhooks:
-                        if 's_shopify_pdf_invoice' in webhook.attributes['address']:
-                            uninstall_wh = True
-                if not uninstall_wh:
-                    self.add_webhook_to_shop(topic='app/uninstalled',
-                                             path="/shopify/webhook/" + self.name + '/' + "s_shopify_pdf_invoice" + '/app_uninstalled')
             if not self.token:
                 self.install = False
                 uninstall_wh = True
+                return False
+                
+            # Start Shopify session and get shop data
+            self.start_shopify_session()
+            shop = shopify.Shop.current()
+            
+            # Update shop information if not already set
+            if not self.email:
+                self.email = shop.attributes.get('email')
+            if not self.country:
+                self.country = shop.attributes.get('country_name')
+                
+            # Check for existing webhooks
+            existing_webhooks = shopify.Webhook.find()
+            if existing_webhooks:
+                for webhook in existing_webhooks:
+                    if 's_shopify_pdf_invoice' in webhook.attributes['address']:
+                        uninstall_wh = True
+                        break
+                        
+            # Add uninstall webhook if not already present
+            if not uninstall_wh:
+                webhook_path = f"/shopify/webhook/{self.name}/s_shopify_pdf_invoice/app_uninstalled"
+                self.add_webhook_to_shop(topic='app/uninstalled', path=webhook_path)
+                
+            # Mark data as fetched if all required data is present
             if self.email and self.country and self.shop_owner and uninstall_wh:
                 self.data_fetched = True
-            shopify.ShopifyResource.clear_session()
-        except Exception as e:
+                
+            return True
+        except shopify.ShopifyException as e:
+            _logger.error(f"Shopify API error: {str(e)}")
             self.data_fetched = False
-            _logger.error(traceback.format_exc())
+            return False
+        except Exception as e:
+            _logger.error(f"Error fetching shop data: {str(e)}")
+            self.data_fetched = False
+            return False
+        finally:
+            shopify.ShopifyResource.clear_session()
 
     def schedule_update_shop_data(self):
-        # shops = self.env['shopify.pdf.shop'].sudo().search([('data_fetched', '=', False)], limit=50, order="create_date desc")
-        # for shop in shops:
-        #     shop.get_data()
+        """
+        Placeholder for scheduled shop data updates
+        This method is currently disabled but kept for potential future use
+        """
         return True
 
-    def delete_webhook_from_shop(self, id):
+    def delete_webhook_from_shop(self, webhook_id):
+        """
+        Delete a specific webhook from the shop
+        Args:
+            webhook_id: The ID of the webhook to delete
+        Returns:
+            bool: True if deletion was successful, False otherwise
+        """
         try:
             self.start_shopify_session()
             hook = shopify.Webhook()
-            hook.id = id
-            hook.destroy()
+            hook.id = webhook_id
+            result = hook.destroy()
+            return True
+        except shopify.ShopifyException as e:
+            _logger.error(f"Shopify API error deleting webhook: {str(e)}")
+            return False
         except Exception as e:
-            _logger.error(traceback.format_exc())
+            _logger.error(f"Error deleting webhook: {str(e)}")
+            return False
 
     def add_webhook_to_shop(self, topic, path):
+        """
+        Add a webhook to the shop
+        Args:
+            topic: The webhook topic/event to subscribe to
+            path: The path to receive webhook notifications
+        Returns:
+            hook: The created webhook object if successful, None otherwise
+        """
         try:
             self.start_shopify_session()
+            
+            # Ensure the path has proper URL format
             if 'http' not in path:
-                address = self.env['ir.config_parameter'].sudo().get_param('web.base.url') + path
+                base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+                address = base_url + path
             else:
                 address = path
+                
+            # Create and save the webhook
             hook = shopify.Webhook()
             hook.topic = topic
             hook.address = address
             hook.format = 'json'
-            hook.save()
-            return hook
+            if hook.save():
+                return hook
+            else:
+                _logger.error(f"Failed to save webhook for topic {topic}")
+                return None
+                
+        except shopify.ShopifyException as e:
+            _logger.error(f"Shopify API error adding webhook: {str(e)}")
+            return None
         except Exception as e:
-            _logger.error(traceback.format_exc())
+            _logger.error(f"Error adding webhook: {str(e)}")
+            return None
 
     def init_default_template(self):
-        exist = False
-        template_default = self.env['shopify.pdf.template.default'].sudo().search([])
-        for template in self.templates:
-            if template.available:
-                exist = True
-                break
-        if not exist:
-            for key in template_default:
+        """
+        Initialize default templates for the shop if none are available
+        Returns:
+            bool: True if initialization is successful
+        """
+        # Check if shop already has any available templates
+        has_available_template = any(template.available for template in self.templates)
+        
+        if not has_available_template:
+            # Get default templates from the system
+            template_defaults = self.env['shopify.pdf.template.default'].sudo().search([])
+            
+            # Create templates for this shop based on defaults
+            for template in template_defaults:
                 self.env['shopify.pdf.shop.template'].sudo().create({
                     'shop_id': self.id,
-                    'name': key.name,
-                    'html': key.html,
-                    'json': key.json,
-                    'type': key.type,
+                    'name': template.name,
+                    'html': template.html,
+                    'json': template.json,
+                    'type': template.type,
                     'page_size': 'a4',
                     'orientation': 'portrait',
                     'font_size': 16,
@@ -152,9 +217,10 @@ class Shopify(models.Model):
                     'bottom_margin': 16,
                     'left_margin': 16,
                     'right_margin': 16,
-                    'default': key.default,
+                    'default': template.default,
                     'available': True,
                 })
+                
         return True
 
     def get_shop_template(self):
@@ -173,6 +239,7 @@ class Shopify(models.Model):
         return templates
 
     def get_resource_url(self, type):
+        """Get the URL for resource icons based on template type"""
         switcher = {
             'invoice': "/shopify_pdf_invoice/static/description/images/bill.png",
             'order': "/shopify_pdf_invoice/static/description/images/order.png",
@@ -180,8 +247,9 @@ class Shopify(models.Model):
             'refund': "/shopify_pdf_invoice/static/description/images/refund.png",
         }
         return switcher.get(type, "/")
-
+        
     def get_all_shop_template(self):
+        """Get all available templates for the shop with metadata"""
         templates = []
         for tem in self.templates:
             if not tem.virtual_rec:
@@ -196,89 +264,161 @@ class Shopify(models.Model):
                     'available_set': True if tem.available else False
                 })
         return templates
-
+    
     def encode(self, key):
-        return int(int(key) * self.id)
+        """Encode a key by multiplying it with the shop id"""
+        key_int = int(key)
+        return key_int * self.id
 
     def decode(self, key):
-        if isinstance(int(key) / self.id, int):
-            return int(int(key) / self.id)
-        return int(int(key) / self.id)
+        """Decode an encoded key by dividing it with the shop id"""
+        key_int = int(key)
+        return key_int // self.id
 
     def get_shop_settings_info(self):
+        """
+        Get shop settings information formatted for the frontend
+        Returns:
+            dict: Dictionary of shop settings for frontend display
+        """
+        # Get template IDs for validation
+        template_ids = [t.id for t in self.templates]
+        
+        # Validate templates
         default_template = ''
         email_notify_template = ''
+        
         if self.default_template and self.default_template != '':
-            if self.decode(int(self.default_template)) in [t.id for t in self.templates]:
+            if self.decode(int(self.default_template)) in template_ids:
                 default_template = self.default_template
+                
         if self.email_notify_template and self.email_notify_template != '':
-            if self.decode(int(self.email_notify_template)) in [t.id for t in self.templates]:
+            if self.decode(int(self.email_notify_template)) in template_ids:
                 email_notify_template = self.email_notify_template
+        
+        # Helper function to get value or default
+        def get_value(value, default=''):
+            return value if value else default
+            
+        # Build settings info dictionary
         info = {
-            'address': self.shop_address if self.shop_address else '',
-            'state': self.shop_state if self.shop_state else '',
-            'city': self.shop_city if self.shop_city else '',
-            'postcode': self.shop_postcode if self.shop_postcode else '',
-            'name': self.shop_company_name if self.shop_company_name else '',
-            'vat': self.shop_vat if self.shop_vat else '',
-            'phone': self.shop_phone if self.shop_phone else '',
-            'zip': self.shop_zip if self.shop_zip else '',
-            'qrcode': self.shop_qr_code if self.shop_qr_code else '',
-            'email': self.shop_email if self.shop_email else '',
-            'allow_backend': True if self.allow_backend else False,
-            'allow_frontend': True if self.allow_frontend else False,
+            # Shop contact information
+            'address': get_value(self.shop_address),
+            'state': get_value(self.shop_state),
+            'city': get_value(self.shop_city),
+            'postcode': get_value(self.shop_postcode),
+            'name': get_value(self.shop_company_name),
+            'vat': get_value(self.shop_vat),
+            'phone': get_value(self.shop_phone),
+            'zip': get_value(self.shop_zip),
+            'qrcode': get_value(self.shop_qr_code),
+            'email': get_value(self.shop_email),
+            
+            # Feature flags
+            'allow_backend': bool(self.allow_backend),
+            'allow_frontend': bool(self.allow_frontend),
             'setup_status': {
-                'is_open_setup_info': True if self.is_open_setup_info else False,
-                'is_allow_frontend': True if self.is_allow_frontend else False,
-                'is_open_template_setting': True if self.is_open_template_setting else False,
+                'is_open_setup_info': bool(self.is_open_setup_info),
+                'is_allow_frontend': bool(self.is_allow_frontend),
+                'is_open_template_setting': bool(self.is_open_template_setting),
             },
 
+            # Shop identity
             'default_template': default_template,
-            'shop': self.name if self.name else 'Hapoapps',
-            'shop_name': self.shop_name if self.shop_name else 'Hapoapps',
-            'shop_owner': self.shop_owner if self.shop_owner else 'Hapoapps',
+            'shop': get_value(self.name, 'Hapoapps'),
+            'shop_name': get_value(self.shop_name, 'Hapoapps'),
+            'shop_owner': get_value(self.shop_owner, 'Hapoapps'),
+            
+            # Templating info
             'email_notify_template': email_notify_template,
             'download_link_text': self.download_link_text,
-            'invoice_start_number': self.invoice_start_number if self.invoice_start_number else '',
+            'invoice_start_number': get_value(self.invoice_start_number),
             'rate': 5 if self.rating == 5 else 0,
-            'front_button_label': self.front_button_label if self.front_button_label else '',
-            'close_congratulation': True if self.close_congratulation else False
+            'front_button_label': get_value(self.front_button_label),
+            'close_congratulation': bool(self.close_congratulation)
         }
+        
         return info
 
     def schedule_change_script(self):
-        shops = self.sudo().search(
-            [('allow_frontend', '=', True), ('token', '!=', False), ('has_change_script', '=', False)])
+        """
+        Schedule script updates for shops that need it
+        Find shops that have frontend enabled but haven't had their scripts updated
+        """
+        shops = self.sudo().search([
+            ('allow_frontend', '=', True),
+            ('token', '!=', False),
+            ('has_change_script', '=', False)
+        ])
+        
         for shop in shops:
             shop.force_change_script()
-        return
+        
+        return True
 
     def force_change_script_shop(self, model):
+        """
+        Force script update for all shops in the provided model
+        Args:
+            model: Collection of shop records to update
+        Returns:
+            bool: True if successful
+        """
+        if not model:
+            return False
+            
         for shop in model:
             shop.force_change_script()
-        return
+            
+        return True
 
     def force_change_script(self):
+        """
+        Update the Shopify script tags for this shop
+        Removes existing PDF script tags and adds the current one
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self.allow_frontend:
+            return False
+            
         try:
+            # Start Shopify session
+            self.start_shopify_session()
+            
+            # Remove existing PDF script tags
+            existed_script_tags = shopify.ScriptTag.find()
+            for script in existed_script_tags:
+                src = script.attributes.get('src', '')
+                if 'pdf' in src:
+                    shopify.ScriptTag.find(script.id).destroy()
 
-            if self.allow_frontend:
-                session = self.start_shopify_session()
-                existedScriptTags = shopify.ScriptTag.find()
-                for script in existedScriptTags:
-                    if 'pdf' in script.attributes.get('src'):
-                        shopify.ScriptTag.find(script.id).destroy()
-
-                script_src = self.env['ir.config_parameter'].sudo().get_param(
-                    'shopify_pdf.shopify_script_front')
-                scriptTag = shopify.ScriptTag.create({
-                    "event": "onload",
-                    "display_scope": "all",
-                    "src": script_src
-                })
-                self.scrip_tag_id = scriptTag.id
-                self.has_change_script = True
+            # Add new script tag
+            script_src = self.env['ir.config_parameter'].sudo().get_param(
+                'shopify_pdf.shopify_script_front')
+                
+            if not script_src:
+                _logger.error(f"Missing configuration: shopify_pdf.shopify_script_front")
+                return False
+                
+            script_tag = shopify.ScriptTag.create({
+                "event": "onload",
+                "display_scope": "all",
+                "src": script_src
+            })
+            
+            # Update shop record
+            self.scrip_tag_id = script_tag.id
+            self.has_change_script = True
+            
+            return True
+            
+        except shopify.ShopifyException as e:
+            _logger.error(f"Shopify API error updating script: {str(e)}")
+            return False
         except Exception as e:
-            a = 0
+            _logger.error(f"Error updating script: {str(e)}")
+            return False
 
     def script_tag_action(self, action=None):
         session = self.start_shopify_session()
@@ -339,89 +479,172 @@ class Shopify(models.Model):
         return self.shopify_session
 
     def get_related_apps(self):
+        """
+        Get list of related apps to display in the dashboard
+        Returns:
+            dict: Dictionary with two lists - regular apps and partner apps
+        """
         hapo_apps = []
         partner_apps = []
+        
         try:
+            # Get all related apps except the current one (pdf)
             apps = self.env['shopify.related.apps'].sudo().search([('key', '!=', 'pdf')])
+            
+            # Process each app and categorize by type
             for app in apps:
+                app_data = {
+                    'title': app.name,
+                    'url': app.url,
+                    'media_url': app.media_url,
+                    'caption': app.caption,
+                    'rate': app.rate,
+                    'rate_count': app.rate_count,
+                    'plan': app.plan,
+                    'owner': app.owner,
+                }
+                
+                # Add to appropriate list based on partner status
                 if not app.is_partner:
-                    hapo_apps.append({
-                        'title': app.name,
-                        'url': app.url,
-                        'media_url': app.media_url,
-                        'caption': app.caption,
-                        'rate': app.rate,
-                        'rate_count': app.rate_count,
-                        'plan': app.plan,
-                        'owner': app.owner,
-                        'quick_install_link': app.quick_install_link,
-                    })
+                    app_data['quick_install_link'] = app.quick_install_link
+                    hapo_apps.append(app_data)
                 else:
-                    partner_apps.append({
-                        'title': app.name,
-                        'url': app.url,
-                        'media_url': app.media_url,
-                        'caption': app.caption,
-                        'rate': app.rate,
-                        'rate_count': app.rate_count,
-                        'plan': app.plan,
-                        'owner': app.owner,
-                    })
+                    partner_apps.append(app_data)
+                    
         except Exception as e:
-            _logger.error(traceback.format_exc())
+            _logger.error(f"Error retrieving related apps: {str(e)}")
+            
         return {
             'apps': hapo_apps,
             'partner_apps': partner_apps
         }
 
-    # Mass action update database
-    # Fix stupid code, dont bother
     def force_update_id_template_setting(self):
-        # find template setting
+        """
+        Mass update template IDs to ensure correct encoding format
+        This fixes legacy template ID storage issues
+        Returns:
+            bool: True if successful
+        """
         for rec in self:
+            # Process default template
             if rec.default_template:
-                template_id_decode = int((int(rec.default_template) - 2020) / rec.id)
-                tem = self.env['shopify.pdf.shop.template'].sudo().browse(template_id_decode)
-                if not tem:
-                    template_id_decode = int((int(rec.default_template - 2021)) / rec.id)
-                for t in rec.templates:
-                    if t.id == template_id_decode:
-                        rec.sudo().write({
-                            'default_template': str(rec.encode(t.id))
-                        })
-                        break
+                try:
+                    # Try both decoding methods
+                    template_ids = []
+                    
+                    # First method: subtract 2020 and divide by shop ID
+                    try:
+                        template_id1 = int((int(rec.default_template) - 2020) / rec.id)
+                        template_ids.append(template_id1)
+                    except Exception:
+                        pass
+                        
+                    # Second method: subtract 2021 and divide by shop ID
+                    try:
+                        template_id2 = int((int(rec.default_template) - 2021) / rec.id)
+                        template_ids.append(template_id2)
+                    except Exception:
+                        pass
+                    
+                    # Find matching template
+                    for template_id in template_ids:
+                        for t in rec.templates:
+                            if t.id == template_id:
+                                rec.sudo().write({
+                                    'default_template': str(rec.encode(t.id))
+                                })
+                                break
+                except Exception as e:
+                    _logger.error(f"Error updating default template ID: {str(e)}")
+            
+            # Process email notification template
             if rec.email_notify_template:
-                template_e_id_decode = int((int(rec.email_notify_template) - 2020) / rec.id)
-                tem = self.env['shopify.pdf.shop.template'].sudo().browse(template_e_id_decode)
-                if not tem:
-                    template_e_id_decode = int((int(rec.email_notify_template) - 2021) / rec.id)
-                for t in rec.templates:
-                    if t.id == template_e_id_decode:
-                        rec.sudo().write({
-                            'email_notify_template': str(rec.encode(t.id))
-                        })
-                        break
+                try:
+                    # Try both decoding methods
+                    template_ids = []
+                    
+                    # First method: subtract 2020 and divide by shop ID
+                    try:
+                        template_id1 = int((int(rec.email_notify_template) - 2020) / rec.id)
+                        template_ids.append(template_id1)
+                    except Exception:
+                        pass
+                        
+                    # Second method: subtract 2021 and divide by shop ID
+                    try:
+                        template_id2 = int((int(rec.email_notify_template) - 2021) / rec.id)
+                        template_ids.append(template_id2)
+                    except Exception:
+                        pass
+                    
+                    # Find matching template
+                    for template_id in template_ids:
+                        for t in rec.templates:
+                            if t.id == template_id:
+                                rec.sudo().write({
+                                    'email_notify_template': str(rec.encode(t.id))
+                                })
+                                break
+                except Exception as e:
+                    _logger.error(f"Error updating email template ID: {str(e)}")
 
         return True
 
     def get_limit_request_status(self):
-        request_to_day = self.env['shopify.pdf.shop.request'].sudo().search(
-            [('create_date', '>=', datetime.now().strftime('%Y-%m-%d 00:00:00')),
-             ('create_date', '<=', datetime.now().strftime('%Y-%m-%d 23:23:59')), ('shop_id', '=', self.id)])
-        if len(request_to_day) >= 2:
-            return True
-        return False
+        """
+        Check if the shop has reached the daily request limit
+        Returns:
+            bool: True if the limit has been reached, False otherwise
+        """
+        # Define request limit constant
+        DAILY_REQUEST_LIMIT = 2
+        
+        try:
+            # Get today's date range (start of day to end of day)
+            today = datetime.now().strftime('%Y-%m-%d')
+            start_of_day = f"{today} 00:00:00"
+            end_of_day = f"{today} 23:59:59"
+            
+            # Count today's requests for this shop
+            request_count = self.env['shopify.pdf.shop.request'].sudo().search_count([
+                ('create_date', '>=', start_of_day),
+                ('create_date', '<=', end_of_day),
+                ('shop_id', '=', self.id)
+            ])
+            
+            # Check if limit reached
+            return request_count >= DAILY_REQUEST_LIMIT
+            
+        except Exception as e:
+            _logger.error(f"Error checking request limit: {str(e)}")
+            # Return False on error to prevent blocking users unnecessarily
+            return False
 
     def get_view_count(self):
-        first_of_month = datetime.today().replace(day=1)
-        if self.create_date > first_of_month:
-            first_of_month = self.create_date
-        records = self.env['shopify.pdf.view.log'].sudo().search(
-            [('shop_id', '=', self.id), ('create_date', '>=', first_of_month)])
-        views_count = 0
-        for rec in records:
-            views_count += rec.view_count
-        return views_count
+        """
+        Get total view count for the shop since the beginning of the month
+        or since the shop was created (if more recent)
+        Returns:
+            int: Total view count
+        """
+        try:
+            # Determine start date (first of month or shop creation date, whichever is later)
+            first_of_month = datetime.today().replace(day=1)
+            start_date = max(first_of_month, self.create_date)
+            
+            # Get view records
+            records = self.env['shopify.pdf.view.log'].sudo().search([
+                ('shop_id', '=', self.id),
+                ('create_date', '>=', start_date)
+            ])
+            
+            # Use mapping and sum for more efficient calculation
+            return sum(record.view_count for record in records)
+            
+        except Exception as e:
+            _logger.error(f"Error getting view count: {str(e)}")
+            return 0
 
 
 class ShopifyPdfTemplate(models.Model):

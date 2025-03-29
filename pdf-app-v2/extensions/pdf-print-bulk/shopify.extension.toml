@@ -1,6 +1,6 @@
 [[extensions]]
 # Name will be used for your link text and is defined in locales/en.default.json and other locale files
-name = "t:name-1"
+name = "t:name-print-bukl"
 
 handle = "pdf-print-bulk"
 type = "admin_link"
