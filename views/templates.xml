@@ -21,7 +21,7 @@
                 </script>
                <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style.css"/>
                <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style-custom.css"/>
-                <meta name="shopify-api-key" content="b532f4655dbba6b411aa1b704520ed69"/>
+                <meta name="shopify-api-key" content="ad3d684716eb9ce05bf21e00079bd672"/>
                 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
                 <!-- <script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="0a35dc9d-32c4-43e8-b3a1-d927b0b87126";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script> -->
             </head>
