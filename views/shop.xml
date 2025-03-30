@@ -136,7 +136,7 @@
             <field name="view_id" ref="res_config_settings_view_pdf_form_shopify"/>
             <field name="view_mode">form</field>
             <field name="target">inline</field>
-            <field name="context">{'module' : 'shopify_pdf_invoice'}</field>
+            <field name="context">{'module' : 'shopify_order_printer'}</field>
         </record>
         <menuitem name="Settings"
                   id="shopify_pdf_invoice_setting_menu"

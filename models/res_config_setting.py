@@ -41,7 +41,7 @@ class ResConfigPdfSettings(models.TransientModel):
         base_url = self.env['ir.config_parameter'].sudo().get_param(
             'web.base.url')
         timestamp = str(datetime.datetime.utcnow().timestamp())
-        cdn_script_tag = base_url + '/shopify_pdf_invoice/static/src/js/pdf-invoice-frontend-button.js'
+        cdn_script_tag = base_url + '/shopify_order_printer/static/src/js/pdf-invoice-frontend-button.js'
         cdn_script_tag = cdn_script_tag + '?v=' + timestamp
         old_scripts = self.sudo().env['shopify.pdf.shop'].search(
             [('token', '!=', False), ('has_change_script', '=', True)])
@@ -66,9 +66,9 @@ class ResConfigPdfSettings(models.TransientModel):
                 Shopify = ShopifyHelper(shop_url=shop.name, token=shop.token, env=self.env)
                 Shopify.set_shop_info()
                 Shopify.get_shop_model().add_webhook_to_shop(topic='orders/create',
-                                                             path="/shopify/webhook/" + shop.name + '/' + "s_shopify_pdf_invoice" + '/order_create')
+                                                             path="/shopify/webhook/" + shop.name + '/' + "s_shopify_order_printer" + '/order_create')
                 Shopify.get_shop_model().add_webhook_to_shop(topic='orders/paid',
-                                                             path="/shopify/webhook/" + shop.name + '/' + "s_shopify_pdf_invoice" + '/order_paid')
+                                                             path="/shopify/webhook/" + shop.name + '/' + "s_shopify_order_printer" + '/order_paid')
             except Exception as e:
                 self.env['ir.logging'].sudo().create({
                     'type': 'server',

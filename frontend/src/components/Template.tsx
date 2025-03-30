@@ -638,7 +638,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   const emptyStateMarkup = (
     <EmptyState
       heading="Looks like you have no templates here"
-      image="/shopify_pdf_invoice/static/description/images/box.png"
+      image="/shopify_order_printer/static/description/images/box.png"
       action={{
         content: 'Create new template',
         onAction: () => {

@@ -99,13 +99,13 @@ class Shopify(models.Model):
             existing_webhooks = shopify.Webhook.find()
             if existing_webhooks:
                 for webhook in existing_webhooks:
-                    if 's_shopify_pdf_invoice' in webhook.attributes['address']:
+                    if 's_shopify_order_printer' in webhook.attributes['address']:
                         uninstall_wh = True
                         break
                         
             # Add uninstall webhook if not already present
             if not uninstall_wh:
-                webhook_path = f"/shopify/webhook/{self.name}/s_shopify_pdf_invoice/app_uninstalled"
+                webhook_path = f"/shopify/webhook/{self.name}/s_shopify_order_printer/app_uninstalled"
                 self.add_webhook_to_shop(topic='app/uninstalled', path=webhook_path)
                 
             # Mark data as fetched if all required data is present
@@ -241,10 +241,10 @@ class Shopify(models.Model):
     def get_resource_url(self, type):
         """Get the URL for resource icons based on template type"""
         switcher = {
-            'invoice': "/shopify_pdf_invoice/static/description/images/bill.png",
-            'order': "/shopify_pdf_invoice/static/description/images/order.png",
-            'packing': "/shopify_pdf_invoice/static/description/images/box.png",
-            'refund': "/shopify_pdf_invoice/static/description/images/refund.png",
+            'invoice': "/shopify_order_printer/static/description/images/bill.png",
+            'order': "/shopify_order_printer/static/description/images/order.png",
+            'packing': "/shopify_order_printer/static/description/images/box.png",
+            'refund': "/shopify_order_printer/static/description/images/refund.png",
         }
         return switcher.get(type, "/")
         
@@ -426,7 +426,7 @@ class Shopify(models.Model):
             'web.base.url')
         # script_src = self.env['ir.config_parameter'].sudo().get_param(
         #     'shopify_pdf.shopify_script_front')
-        script_src = base_url + '/shopify_pdf_invoice/static/src/js/pdf-invoice-frontend-button.js'
+        script_src = base_url + '/shopify_order_printer/static/src/js/pdf-invoice-frontend-button.js'
 
         existedScriptTags = shopify.ScriptTag.find(src=script_src)
 

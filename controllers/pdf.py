@@ -57,7 +57,7 @@ class PdfReportController(http.Controller):
             dict: Sample item data dictionary
         """
         base_url = request.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        logo_url = f"{base_url}/shopify_pdf_invoice/static/description/Logo.png"
+        logo_url = f"{base_url}/shopify_order_printer/static/description/Logo.png"
         
         return {
             '{{product_image}}': f'<img style="width: 100px" src="{logo_url}"/>',
@@ -433,7 +433,7 @@ class PdfReportController(http.Controller):
             headers = {'Content-Security-Policy': f"frame-ancestors https://{request.session['shop_url_pdf']} https://admin.shopify.com;"}
         
         # Render error page
-        return request.render('shopify_pdf_invoice.404_not_found', headers=headers)
+        return request.render('shopify_order_printer.404_not_found', headers=headers)
 
     def _get_embed_url_for_order(self, type, order_id, shop, is_draft_order=False):
         """
@@ -565,7 +565,7 @@ class PdfReportController(http.Controller):
             
             # Check if backend access is allowed
             if not shop_model.allow_backend:
-                return request.render('shopify_pdf_invoice.turn_off', headers=headers)
+                return request.render('shopify_order_printer.turn_off', headers=headers)
             
             # Process based on action type
             embed = None
@@ -601,9 +601,9 @@ class PdfReportController(http.Controller):
             
             # Return appropriate template
             if embed is not None:
-                return request.render('shopify_pdf_invoice.preview', value, headers=headers)
+                return request.render('shopify_order_printer.preview', value, headers=headers)
             else:
-                return request.render('shopify_pdf_invoice.turn_off', headers=headers)
+                return request.render('shopify_order_printer.turn_off', headers=headers)
                 
         except Exception as e:
             # Handle exceptions
@@ -620,7 +620,7 @@ class PdfReportController(http.Controller):
                 }
                 
             # Render error page
-            return request.render('shopify_pdf_invoice.404_not_found', headers=headers)
+            return request.render('shopify_order_printer.404_not_found', headers=headers)
 
     def _get_order_for_pdf(self, order_id, is_draft_order):
         """
@@ -721,7 +721,7 @@ class PdfReportController(http.Controller):
             
             # Check if backend access is allowed
             if not session['shop'].allow_backend:
-                return request.render('shopify_pdf_invoice.turn_off', headers=headers)
+                return request.render('shopify_order_printer.turn_off', headers=headers)
                 
             # Get order ID
             if 'id' not in params:
@@ -734,7 +734,7 @@ class PdfReportController(http.Controller):
             
             # Check order eligibility for this PDF type
             if not self._check_order_eligibility(order, type):
-                return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                return request.render('shopify_order_printer.empty_state', headers=headers)
                 
             # Create orders list
             orders = [order]
@@ -746,7 +746,7 @@ class PdfReportController(http.Controller):
             
             # Check if template exists
             if not templates:
-                return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                return request.render('shopify_order_printer.empty_state', headers=headers)
                 
             # Generate file name
             order_name = order.attributes.get('name', '') if hasattr(order, 'attributes') else ''
@@ -792,7 +792,7 @@ class PdfReportController(http.Controller):
                 }
                 
             # Return error page
-            return request.render('shopify_pdf_invoice.404_not_found', {'e': str(e)}, headers=headers)
+            return request.render('shopify_order_printer.404_not_found', {'e': str(e)}, headers=headers)
 
     @http.route('/pdf/single/print/<string:type>', type='http', auth="public", save_session=False)
     def print_single_pdf(self, type=None):
@@ -809,7 +809,7 @@ class PdfReportController(http.Controller):
                 # check limit plan
                 # if isDraftOrder:
                 #     if not session['shop'].get_current_plan().price > 0:
-                #         return request.render('shopify_pdf_invoice.empty_state_limit_pdf_view', {
+                #         return request.render('shopify_order_printer.empty_state_limit_pdf_view', {
                 #             'type': 'limit_view_draft_order',
                 #         }, headers=headers)
                 order_id = params['id']
@@ -817,7 +817,7 @@ class PdfReportController(http.Controller):
                 view_count = session['shop'].get_view_count()
                 if session['shop'].get_current_plan().limit_pdf_view > 0:
                     if view_count > session['shop'].get_current_plan().limit_pdf_view:
-                        return request.render('shopify_pdf_invoice.empty_state_limit_pdf_view', {
+                        return request.render('shopify_order_printer.empty_state_limit_pdf_view', {
                             'type': 'limit_pdf_view_order',
                         }, headers=headers)
                 if not isDraftOrder:
@@ -841,7 +841,7 @@ class PdfReportController(http.Controller):
                                 orders.append(order)
                     templates = session['shop'].templates.filtered(lambda l: l.default == True and l.type == type)
                     if len(templates) == 0 or len(orders) == 0:
-                        return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                        return request.render('shopify_order_printer.empty_state', headers=headers)
                     # create view log
                     request.env['shopify.pdf.view.log'].sudo().create({
                         'name': session['shop'].name + '-' + 'view order',
@@ -866,8 +866,8 @@ class PdfReportController(http.Controller):
                     # response.set_cookie('fileToken', token)
                     return response
                 else:
-                    return request.render('shopify_pdf_invoice.turn_off', headers=headers)
-            return request.render('shopify_pdf_invoice.turn_off', headers=headers)
+                    return request.render('shopify_order_printer.turn_off', headers=headers)
+            return request.render('shopify_order_printer.turn_off', headers=headers)
         except Exception as e:
             shop = None
             if 'shop' in request.params:
@@ -876,7 +876,7 @@ class PdfReportController(http.Controller):
             _logger.error(traceback.format_exc())
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.404_not_found', {'e': str(e)}, headers=headers)
+            return request.render('shopify_order_printer.404_not_found', {'e': str(e)}, headers=headers)
 
     @http.route('/admin/pdf/bulk/print/<string:type>', type='http', auth="user")
     def admin_print_multiple_pdf(self, type=None):
@@ -922,7 +922,7 @@ class PdfReportController(http.Controller):
                         if len(order.attributes.get('fulfillments')) > 0:
                             orders.append(order)
                 if len(templates) == 0 or len(orders) == 0:
-                    return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                    return request.render('shopify_order_printer.empty_state', headers=headers)
                 orders.reverse()
                 image_data = self.get_image_data(orders=orders, shop=session['shop'], template=templates)
                 file_name = 'Order_'
@@ -930,7 +930,7 @@ class PdfReportController(http.Controller):
                     file_name = re.sub('[^A-Za-z0-9]+', '', order.attributes.get('name') + '_')
                 mode = 'inline'
                 if len(templates) == 0:
-                    return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                    return request.render('shopify_order_printer.empty_state', headers=headers)
                 merged_pdf = session['shop'].get_pdf(templates=templates, orders=orders, image_data=image_data,
                                                      type=type, isDraftOrder=isDraftOrder)
                 pdfhttpheaders = [
@@ -943,13 +943,13 @@ class PdfReportController(http.Controller):
                 response = request.make_response(merged_pdf, headers=pdfhttpheaders)
                 # response.set_cookie('fileToken', token)
                 return response
-            return request.render('shopify_pdf_invoice.turn_off', headers=headers)
+            return request.render('shopify_order_printer.turn_off', headers=headers)
         except Exception as e:
             self.create_shop_log(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.404_not_found', {'e': str(e)}, headers=headers)
+            return request.render('shopify_order_printer.404_not_found', {'e': str(e)}, headers=headers)
 
     @http.route('/pdf/bulk/print/<string:type>', type='http', auth="public", save_session=False)
     def print_multiple_pdf(self, type=None):
@@ -966,7 +966,7 @@ class PdfReportController(http.Controller):
                 # check plan
                 # if isDraftOrder:
                 #     if not session['shop'].get_current_plan().price > 0:
-                #         return request.render('shopify_pdf_invoice.empty_state_limit_pdf_view', {
+                #         return request.render('shopify_order_printer.empty_state_limit_pdf_view', {
                 #             'type': 'limit_view_draft_order',
                 #         }, headers=headers)
                 if 'url' in params:
@@ -983,7 +983,7 @@ class PdfReportController(http.Controller):
                             ids.append(string)
                 filters = ','.join(ids)
                 if session['shop'] and 0 < session['shop'].get_current_plan().limit_bulk_print < len(ids):
-                    return request.render('shopify_pdf_invoice.empty_state_limit_bulk', {
+                    return request.render('shopify_order_printer.empty_state_limit_bulk', {
                         'bulk_limit': session['shop'].plan.limit_bulk_print,
                         'plan_name': session['shop'].plan.name
                     }, headers=headers)
@@ -991,7 +991,7 @@ class PdfReportController(http.Controller):
                 view_count = session['shop'].get_view_count()
                 if session['shop'].get_current_plan().limit_pdf_view > 0:
                     if view_count > session['shop'].get_current_plan().limit_pdf_view:
-                        return request.render('shopify_pdf_invoice.empty_state_limit_pdf_view', {
+                        return request.render('shopify_order_printer.empty_state_limit_pdf_view', {
                             'type': 'limit_pdf_view_order',
                         }, headers=headers)
                 if not isDraftOrder:
@@ -1013,7 +1013,7 @@ class PdfReportController(http.Controller):
                         if len(order.attributes.get('fulfillments')) > 0:
                             orders.append(order)
                 if len(templates) == 0 or len(orders) == 0:
-                    return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                    return request.render('shopify_order_printer.empty_state', headers=headers)
                 # create view log
                 request.env['shopify.pdf.view.log'].sudo().create({
                     'name': session['shop'].name + '-' + 'view order',
@@ -1027,7 +1027,7 @@ class PdfReportController(http.Controller):
                     file_name = re.sub('[^A-Za-z0-9]+', '', order.attributes.get('name') + '_')
                 mode = 'inline'
                 if len(templates) == 0:
-                    return request.render('shopify_pdf_invoice.empty_state', headers=headers)
+                    return request.render('shopify_order_printer.empty_state', headers=headers)
                 merged_pdf = session['shop'].get_pdf(templates=templates, orders=orders, image_data=image_data,
                                                      type=type, isDraftOrder=isDraftOrder)
                 pdfhttpheaders = [
@@ -1040,7 +1040,7 @@ class PdfReportController(http.Controller):
                 response = request.make_response(merged_pdf, headers=pdfhttpheaders)
                 # response.set_cookie('fileToken', token)
                 return response
-            return request.render('shopify_pdf_invoice.turn_off', headers=headers)
+            return request.render('shopify_order_printer.turn_off', headers=headers)
         except Exception as e:
             shop = None
             if 'shop' in request.params:
@@ -1049,7 +1049,7 @@ class PdfReportController(http.Controller):
             _logger.error(traceback.format_exc())
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.404_not_found', {'e': str(e)}, headers=headers)
+            return request.render('shopify_order_printer.404_not_found', {'e': str(e)}, headers=headers)
 
     def get_image_data(self, orders=None, shop=None, template=None):
         image_data = {}

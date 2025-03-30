@@ -54,7 +54,7 @@ class Main(http.Controller):
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
         except Exception as e:
             # _logger.error(str(e))
             self.create_shop_log(log=traceback.format_exc())
@@ -171,7 +171,7 @@ class Main(http.Controller):
                 value.update({'mode': mode, 'template_info': template_info})
 
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session['shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
         except Exception as e:
             # print(e)
             # _logger.error(str(e))
@@ -381,7 +381,7 @@ class Main(http.Controller):
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
         except Exception as e:
             # print(e)
             # _logger.error(str(e))
@@ -419,7 +419,7 @@ class Main(http.Controller):
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
         except Exception as e:
             self.create_shop_log(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
@@ -464,7 +464,7 @@ class Main(http.Controller):
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
         except Exception as e:
             # print(e)
             # _logger.error(str(e))
@@ -573,7 +573,7 @@ class Main(http.Controller):
 
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
         except Exception as e:
             self.create_shop_log(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
@@ -871,6 +871,6 @@ class Main(http.Controller):
     def render_exception(self):
         headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
             'shop_url_pdf'] + " https://admin.shopify.com;"}
-        return request.render('shopify_pdf_invoice.exception', {
+        return request.render('shopify_order_printer.exception', {
             'reset_action': '/shopify/pdf/reset'
         }, headers=headers)

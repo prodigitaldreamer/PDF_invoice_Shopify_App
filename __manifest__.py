@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "shopify_pdf",
-
+    'name': "shopify_order_printer",
+    'license': 'LGPL-3',
     'summary': """
         Shopify PDF invoices""",
-
     'description': """
         Long description of module's purpose
     """,
+    'application': True,
+    'installable': True,
+    'auto_install': False,
 
-    'author': "Magenest",
-    'website': "https://store.magenest.com/",
-
-    # Categories can be used to filter modules in modules listing
-    # Check https://github.com/odoo/odoo/blob/13.0/odoo/addons/base/data/ir_module_category_data.xml
+    'author': "Pullush",
     # for the full list
     'category': 'Web App',
     'version': '0.1',
@@ -37,9 +35,8 @@
         'demo/demo.xml',
     ],
     'assets': {
-        'shopify_pdf_invoice.pdf_js_package_assets': [
-            '/shopify_pdf_invoice/static/src/js/package.js',
-            # '/shopify_pdf_invoice/static/src/js/pdf-invoice-frontend-button.js',
+        'shopify_order_printer.pdf_js_package_assets': [
+            '/shopify_order_printer/static/src/js/package.js',
         ],
     }
 }

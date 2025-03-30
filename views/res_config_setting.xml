@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
             <xpath expr="//div[hasclass('settings')]" position="inside">
                 <div class="app_settings_block" string="Shopify PDF"
-                     data-key="shopify_pdf_invoice"
+                     data-key="shopify_order_printer"
                      groups="base.group_system">
                     <h2>Shopify</h2>
                     <div class="row mt16 o_settings_container">

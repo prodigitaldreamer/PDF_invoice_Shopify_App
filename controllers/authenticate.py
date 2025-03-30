@@ -141,7 +141,7 @@ class ShopifyConnector(http.Controller):
             print("perm",permission_url)
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.redirect', {
+            return request.render('shopify_order_printer.redirect', {
                 'url': permission_url
             }, headers=headers)
             # return request.redirect(permission_url)
@@ -184,11 +184,11 @@ class ShopifyConnector(http.Controller):
             Shopify = ShopifyHelper(shop_url=shop, token=token, env=request.env)
             Shopify.set_shop_info()
             Shopify.get_shop_model().add_webhook_to_shop(topic='app/uninstalled',
-                                                         path="/shopify/webhook/" + shop + '/' + "s_shopify_pdf_invoice" + '/app_uninstalled')
+                                                         path="/shopify/webhook/" + shop + '/' + "s_shopify_order_printer" + '/app_uninstalled')
             Shopify.get_shop_model().add_webhook_to_shop(topic='orders/create',
-                                                         path="/shopify/webhook/" + shop + '/' + "s_shopify_pdf_invoice" + '/order_create')
+                                                         path="/shopify/webhook/" + shop + '/' + "s_shopify_order_printer" + '/order_create')
             Shopify.get_shop_model().add_webhook_to_shop(topic='orders/paid',
-                                                         path="/shopify/webhook/" + shop + '/' + "s_shopify_pdf_invoice" + '/order_paid')
+                                                         path="/shopify/webhook/" + shop + '/' + "s_shopify_order_printer" + '/order_paid')
 
             # redirect_url = redirect_url
             # if Shopify.shop_model and Shopify.shop_model.launch_url:
@@ -292,7 +292,7 @@ class ShopifyConnector(http.Controller):
         else:
             return False
 
-    @http.route('/shopify/webhook/<string:shop>/s_shopify_pdf_invoice/app_uninstalled', type='json', auth="public")
+    @http.route('/shopify/webhook/<string:shop>/s_shopify_order_printer/app_uninstalled', type='json', auth="public")
     def uninstall_webhook(self, shop=None):
         try:
             secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
@@ -314,7 +314,7 @@ class ShopifyConnector(http.Controller):
         templates = shop.get_shop_template()
         return info, templates
 
-    @http.route('/shopify/webhook/<string:shop>/s_shopify_pdf_invoice/order_create', type='json', auth="public")
+    @http.route('/shopify/webhook/<string:shop>/s_shopify_order_printer/order_create', type='json', auth="public")
     def order_create(self, shop=None):
         try:
             secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
@@ -330,7 +330,7 @@ class ShopifyConnector(http.Controller):
         except Exception as e:
             _logger.error(traceback.format_exc())
 
-    @http.route('/shopify/webhook/<string:shop>/s_shopify_pdf_invoice/order_paid', type='json', auth="public")
+    @http.route('/shopify/webhook/<string:shop>/s_shopify_order_printer/order_paid', type='json', auth="public")
     def order_paid(self, shop=None):
         try:
             secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')

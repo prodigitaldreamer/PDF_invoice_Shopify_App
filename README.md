@@ -1,5 +1,5 @@
 - PDF Invoice app for Shopify
-- Module name : shopify_pdf_invoice
+- Module name : shopify_order_printer
 - run install requirements.txt trong module
   
   auto remove wkhtmltopdf 

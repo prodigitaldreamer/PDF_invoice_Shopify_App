@@ -31,7 +31,7 @@ class Plan(PdfReportController):
 
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_pdf_invoice.redirect', {
+            return request.render('shopify_order_printer.redirect', {
                 'url': charge_url
             }, headers=headers)
         except Exception as e:

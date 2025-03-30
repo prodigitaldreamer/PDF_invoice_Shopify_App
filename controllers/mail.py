@@ -145,7 +145,7 @@ class Mail(PdfReportController):
                         elif product_id + 'none' in image_data[product_id]:
                             item.attributes['image_url'] = image_data[product_id][product_id + 'none']
 
-                content = request.env["ir.ui.view"]._render_template('shopify_pdf_invoice.mail', {
+                content = request.env["ir.ui.view"]._render_template('shopify_order_printer.mail', {
                     'custom_message': custom_message,
                     'order_name': order.attributes.get('name'),
                     'shop_name': shop_model.shop_company_name,
@@ -282,13 +282,13 @@ class Mail(PdfReportController):
                 },
                 'items': [
                     {
-                        'image_url': '%s/shopify_pdf_invoice/static/description/Logo.png' % (request.env['ir.config_parameter'].sudo().get_param('web.base.url')),
+                        'image_url': '%s/shopify_order_printer/static/description/Logo.png' % (request.env['ir.config_parameter'].sudo().get_param('web.base.url')),
                         'name': 'Adidas Green/Black',
                         'price': '50.00',
                         'quantity': '2',
                     },
                     {
-                        'image_url': '%s/shopify_pdf_invoice/static/description/Logo.png' % (request.env['ir.config_parameter'].sudo().get_param('web.base.url')),
+                        'image_url': '%s/shopify_order_printer/static/description/Logo.png' % (request.env['ir.config_parameter'].sudo().get_param('web.base.url')),
                         'name': 'Nike Green/Black',
                         'price': '50.00',
                         'quantity': '3',
@@ -300,7 +300,7 @@ class Mail(PdfReportController):
             pdf_content = shop_model.get_pdf(orders=[order], templates=templates, type=type, prepare_data=sample_data)
 
             # mail body
-            content = request.env["ir.ui.view"]._render_template('shopify_pdf_invoice.mail', {
+            content = request.env["ir.ui.view"]._render_template('shopify_order_printer.mail', {
                 'custom_message': custom_message,
                 'order_name': sample_data.get('order_name'),
                 'shop_name': shop_model.shop_company_name,
