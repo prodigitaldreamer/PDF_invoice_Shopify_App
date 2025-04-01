@@ -182,9 +182,6 @@
             <field name="model">shopify.pdf.shop.request</field>
             <field name="arch" type="xml">
                 <form>
-                    <header>
-                        <button string='Sent Email MKT' name="force_sent" type="object" class="btn-primary"/>
-                    </header>
                     <sheet>
                         <group>
                             <field name="name"/>
