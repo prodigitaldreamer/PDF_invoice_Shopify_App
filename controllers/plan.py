@@ -7,7 +7,7 @@ from odoo.http import request
 from ..oauth2.auth import ShopifyHelper
 from ..oauth2.decorator import ensure_login
 import json
-from ..app import CUSTOM_FONTS
+from ..font import CUSTOM_FONTS
 from .pdf import PdfReportController
 
 _logger = logging.getLogger(__name__)

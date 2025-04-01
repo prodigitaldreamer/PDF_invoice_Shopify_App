@@ -21,7 +21,7 @@ import io
 import os
 # from odoo.tools import html_escape as escape
 import html as HTML
-from ..app import PDF_FONTS_CSS_PATH
+from ..font import PDF_FONTS_CSS_PATH
 from xml.dom.minidom import Element, parseString, _write_data
 from lxml import etree, html
 import xml.etree.ElementTree as ET

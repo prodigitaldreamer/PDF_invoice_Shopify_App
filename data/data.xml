@@ -12,29 +12,6 @@
             <field name="state">code</field>
             <field name="code">model.schedule_sync()</field>
         </record>
-<!--        <record id="ir_cron_shopify_pdf_cron_get_data" model="ir.cron">-->
-<!--            <field name="name">Shopify PDF Templates Get Data</field>-->
-<!--            <field name="active" eval="True"/>-->
-<!--            <field name="interval_number">15</field>-->
-<!--            <field name="interval_type">minutes</field>-->
-<!--            <field name="numbercall">-1</field>-->
-<!--            <field name="doall" eval="True"/>-->
-<!--            <field name="model_id" ref="model_shopify_pdf_shop"/>-->
-<!--            <field name="state">code</field>-->
-<!--            <field name="code">model.schedule_update_shop_data()</field>-->
-<!--        </record>-->
-<!--        <record id="ir_cron_shopify_pdf_check_plan" model="ir.cron">-->
-<!--            <field name="name">Shopify PDF Check Plan Job</field>-->
-<!--            <field name="active" eval="True" />-->
-<!--            <field name="user_id" ref="base.user_root"/>-->
-<!--            <field name="interval_number">12</field>-->
-<!--            <field name="interval_type">hours</field>-->
-<!--            <field name="numbercall">-1</field>-->
-<!--            <field name="doall" eval="True"/>-->
-<!--            <field name="model_id" ref="model_shopify_pdf_shop"/>-->
-<!--            <field name="state">code</field>-->
-<!--            <field name="code">model.schedule_check_plan()</field>-->
-<!--        </record>-->
 
         <record id="ir_cron_shopify_pdf_update_script" model="ir.cron">
             <field name="name">### Shopify PDf - Update Script</field>

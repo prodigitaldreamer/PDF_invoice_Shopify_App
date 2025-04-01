@@ -1,10 +1,10 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "b532f4655dbba6b411aa1b704520ed69"
-application_url = "https://staging-apps.pullush.com//shopify/pdf"
+client_id = "87e74578b5674b3f8a3f100fdc640e93"
+application_url = "https://staging-apps.pullush.com/shopify/pdf"
 embedded = true
-name = "PDF_DEMO"
-handle = "pdf_demo"
+name = "Order Printer Demo"
+handle = "order_printer_demo"
 
 [build]
 include_config_on_deploy = true
@@ -13,12 +13,12 @@ include_config_on_deploy = true
 api_version = "2025-01"
 
 [auth]
-redirect_urls = [ "https://staging-apps.pullush.com//shopify/pdf/auth" ]
+redirect_urls = [ "https://staging-apps.pullush.com/shopify/pdf/auth" ]
 
 [pos]
 embedded = false
 
 [app_proxy]
-url = "https://staging-apps.pullush.com/"
+url = "https://staging-apps.pullush.com"
 subpath = "order-printer"
 prefix = "apps"

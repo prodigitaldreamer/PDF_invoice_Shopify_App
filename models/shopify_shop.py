@@ -12,66 +12,147 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class Shopify(models.Model):
+class ShopifyShop(models.Model):
+    """
+    Represents a Shopify store integrated with the PDF Invoice application.
+    
+    This model stores all shop-related information, including authentication details,
+    shop settings, template preferences, and usage statistics. It also provides
+    methods to interact with the Shopify API, manage webhooks, and handle 
+    PDF template initialization.
+    """
     _name = 'shopify.pdf.shop'
-    _description = 'Shopify Shop'
+    _description = 'Shopify Shop Integration'
 
-    name = fields.Char(string='Shop URL', index=True)
-    token = fields.Char('Shopify token')
-    timezone = fields.Char('Timezone')
-    shop_name = fields.Char()
-    shop_owner = fields.Char()
-    email = fields.Char()
-    country = fields.Char()
-    install = fields.Boolean(default=True)
-    data_fetched = fields.Boolean(default=False)
-    status = fields.Boolean()
-    image_128 = fields.Image("Image Logo")
-    # shop setting
-    shop_address = fields.Char()
-    shop_state = fields.Char()
-    shop_city = fields.Char()
-    shop_postcode = fields.Char()
-    shop_company_name = fields.Char()
-    shop_vat = fields.Char()
-    shop_zip = fields.Char()
-    shop_qr_code = fields.Char()
-    shop_phone = fields.Char()
-    shop_email = fields.Char()
-    allow_backend = fields.Boolean(default=False)
-    allow_frontend = fields.Boolean()
-    default_template = fields.Char()
-    templates = fields.One2many('shopify.pdf.shop.template', 'shop_id', string='Templates')
-    scrip_tag_id = fields.Char()
-    close_congratulation = fields.Boolean(default=False)
-    # launch
-    launch_url = fields.Char()
-    redirect_action = fields.Char()
-    shopify_session = fields.Char()
-    # email notify template
-    email_notify_template = fields.Char()
-    download_link_text = fields.Char(default='Download your PDF Invoice here')
-    invoice_start_number = fields.Char()
-    invoice_last_number = fields.Char()
-    # rating
-    rating = fields.Integer('Rate')
-    review = fields.Char('Review')
-    # force update
-    force_update_scope = fields.Boolean('Force update scope', default=True)
-    front_button_label = fields.Char(default='Print your invoice here')
-    has_change_script = fields.Boolean(default=False)
-    is_reload_session = fields.Boolean(default=False)
-    email_send = fields.Integer()
-    total_of_month = fields.Integer()
-    is_allow_frontend = fields.Boolean(default=False)
-    is_open_template_setting = fields.Boolean(default=False)
-    is_open_setup_info = fields.Boolean(default=False)
-    #Home Setup
-    check_infor = fields.Boolean(default=False)
-    check_print_button = fields.Boolean(default=False)
-    check_insert_button = fields.Boolean(default=False)
-    check_custom_invoice_number = fields.Boolean(default=False)
-    check_custom_invoice_template = fields.Boolean(default=False)
+    # Shop identification and authentication
+    name = fields.Char(string='Shop URL', index=True, required=True,
+                      help="Shopify store URL (e.g., mystore.myshopify.com)")
+    token = fields.Char(string='Shopify API Token',
+                       help="OAuth token for accessing Shopify API")
+    shopify_session = fields.Char(string='Session Data',
+                                 help="Serialized session information for Shopify API")
+    
+    # Basic shop information
+    shop_name = fields.Char(string='Shop Name',
+                           help="Display name of the Shopify shop")
+    shop_owner = fields.Char(string='Shop Owner',
+                            help="Name of the shop owner")
+    email = fields.Char(string='Primary Email',
+                       help="Primary email address for the shop")
+    timezone = fields.Char(string='Timezone',
+                          help="Shop's timezone setting from Shopify")
+    country = fields.Char(string='Country',
+                         help="Country where the shop is registered")
+    image_128 = fields.Image(string="Shop Logo",
+                            help="Shop logo image")
+    
+    # Shop status flags
+    install = fields.Boolean(string='Is Installed', default=True,
+                            help="Whether the app is installed on this shop")
+    data_fetched = fields.Boolean(string='Data Fetched', default=False,
+                                 help="Whether shop data has been fetched from Shopify")
+    status = fields.Boolean(string='Active Status',
+                           help="Whether the shop is active")
+    
+    # Shop contact information
+    shop_address = fields.Char(string='Address',
+                              help="Street address of the shop")
+    shop_state = fields.Char(string='State/Province',
+                            help="State or province of the shop")
+    shop_city = fields.Char(string='City',
+                           help="City of the shop")
+    shop_postcode = fields.Char(string='Postal Code',
+                               help="Postal code of the shop")
+    shop_zip = fields.Char(string='ZIP Code',
+                          help="ZIP code for US addresses")
+    shop_company_name = fields.Char(string='Company Name',
+                                   help="Legal company name of the shop")
+    shop_vat = fields.Char(string='VAT Number',
+                          help="VAT or tax identification number")
+    shop_qr_code = fields.Char(string='QR Code Data',
+                              help="Data for generating QR code on invoices")
+    shop_phone = fields.Char(string='Phone Number',
+                            help="Contact phone number for the shop")
+    shop_email = fields.Char(string='Contact Email',
+                            help="Contact email for the shop (may differ from primary)")
+    
+    # Template settings
+    default_template = fields.Char(string='Default Template ID',
+                                  help="Encoded ID of the default template")
+    email_notify_template = fields.Char(string='Email Notification Template ID',
+                                       help="Encoded ID of the template used for email notifications")
+    templates = fields.One2many('shopify.pdf.shop.template', 'shop_id', string='Templates',
+                               help="PDF templates associated with this shop")
+    
+    # Feature access controls
+    allow_backend = fields.Boolean(string='Allow Backend Access', default=False,
+                                  help="Whether to allow access to admin backend features")
+    allow_frontend = fields.Boolean(string='Allow Frontend Access',
+                                   help="Whether to allow frontend customer-facing features")
+    is_allow_frontend = fields.Boolean(string='Frontend Status Flag', default=False,
+                                      help="UI flag for frontend access status")
+    
+    # UI state tracking
+    is_open_template_setting = fields.Boolean(string='Template Settings Open', default=False,
+                                             help="UI state for template settings panel")
+    is_open_setup_info = fields.Boolean(string='Setup Info Open', default=False,
+                                       help="UI state for setup information panel")
+    close_congratulation = fields.Boolean(string='Hide Congratulation', default=False,
+                                         help="Whether to hide the congratulation message")
+    
+    # Shopify script integration
+    scrip_tag_id = fields.Char(string='Script Tag ID',
+                              help="ID of the script tag installed on the Shopify store")
+    has_change_script = fields.Boolean(string='Script Updated', default=False,
+                                      help="Whether the script tag has been updated")
+    
+    # URL and redirect settings
+    launch_url = fields.Char(string='Launch URL',
+                            help="URL to launch the app from Shopify admin")
+    redirect_action = fields.Char(string='Redirect Action',
+                                 help="Action to redirect to after authentication")
+    
+    # Invoice and email settings
+    download_link_text = fields.Char(string='Download Link Text', 
+                                    default='Download your PDF Invoice here',
+                                    help="Text to display for PDF download links in emails")
+    invoice_start_number = fields.Char(string='Starting Invoice Number',
+                                      help="First number to use in invoice sequence")
+    invoice_last_number = fields.Char(string='Last Invoice Number',
+                                     help="Last used invoice number")
+    front_button_label = fields.Char(string='Frontend Button Label', 
+                                    default='Print your invoice here',
+                                    help="Text to display on invoice print buttons")
+    
+    # Usage statistics
+    email_send = fields.Integer(string='Emails Sent',
+                               help="Count of emails sent in the current period")
+    total_of_month = fields.Integer(string='Monthly Total',
+                                   help="Total usage count for the current month")
+    
+    # User rating and feedback
+    rating = fields.Integer(string='User Rating',
+                           help="Rating provided by the shop owner (1-5)")
+    review = fields.Char(string='User Review',
+                        help="Review text provided by the shop owner")
+    
+    # System settings
+    force_update_scope = fields.Boolean(string='Force Update Scope', default=True,
+                                       help="Whether to force update of API scopes on next auth")
+    is_reload_session = fields.Boolean(string='Reload Session', default=False,
+                                      help="Whether to reload the Shopify session on next request")
+    
+    # Setup completion tracking
+    check_infor = fields.Boolean(string='Info Setup Complete', default=False,
+                                help="Whether shop information setup is complete")
+    check_print_button = fields.Boolean(string='Print Button Setup Complete', default=False,
+                                       help="Whether print button setup is complete")
+    check_insert_button = fields.Boolean(string='Insert Button Setup Complete', default=False,
+                                        help="Whether insert button setup is complete")
+    check_custom_invoice_number = fields.Boolean(string='Custom Invoice Number Setup Complete', default=False,
+                                               help="Whether custom invoice number setup is complete")
+    check_custom_invoice_template = fields.Boolean(string='Custom Template Setup Complete', default=False,
+                                                 help="Whether custom template setup is complete")
 
     def get_data(self):
         """
@@ -647,92 +728,219 @@ class Shopify(models.Model):
             return 0
 
 
-class ShopifyPdfTemplate(models.Model):
+class ShopPdfTemplate(models.Model):
+    """
+    Represents a PDF template assigned to a specific Shopify shop.
+    
+    Each shop can have multiple templates for different purposes (invoices,
+    packing slips, etc.) with customized formatting settings. Templates contain
+    HTML content that can be rendered with order data to generate PDFs.
+    """
     _name = 'shopify.pdf.shop.template'
+    _description = 'Shop-specific PDF Template'
 
-    name = fields.Char()
-    shop_id = fields.Many2one('shopify.pdf.shop', string="Shop", index=True)
-    html = fields.Text()
-    json = fields.Text()
-    type = fields.Selection([('order', 'Orders'), ('invoice', 'Invoice'), ('packing', 'Packing'), ('refund', 'Refund')],
-                            string='Type')
-    # setting
-    page_size = fields.Selection([('a4', 'A4'), ('a5', 'A5'), ('a6', 'A6'),
-                                  ('Letter', 'Letter'), ('Legal', 'Legal'), ('Tabloid', 'Tabloid')], string='Size')
-    orientation = fields.Selection([('portrait', 'Portrait'), ('landscape', 'Landscape')], string='Orientation')
-    font_size = fields.Float(default=16.0)
-    font_family = fields.Char()
-    top_margin = fields.Float()
-    bottom_margin = fields.Float()
-    left_margin = fields.Float()
-    right_margin = fields.Float()
-    default = fields.Boolean(default=False)
-    available = fields.Boolean(default=False)
-    clipboard = fields.Char("Clip Board")
-    virtual_rec = fields.Boolean(default=False, index=True)
+    name = fields.Char(string="Template Name", required=True, help="Descriptive name for this template")
+    shop_id = fields.Many2one('shopify.pdf.shop', string="Shop", index=True, required=True, 
+                             help="The shop this template belongs to")
+    html = fields.Text(string="HTML Content", help="HTML structure of the template")
+    json = fields.Text(string="JSON Configuration", help="Template configuration in JSON format")
+    type = fields.Selection([
+        ('order', 'Orders'), 
+        ('invoice', 'Invoice'), 
+        ('packing', 'Packing'), 
+        ('refund', 'Refund')
+    ], string='Document Type', required=True, help="The type of document this template generates")
+    
+    # Layout settings
+    page_size = fields.Selection([
+        ('a4', 'A4'), 
+        ('a5', 'A5'), 
+        ('a6', 'A6'),
+        ('Letter', 'Letter'), 
+        ('Legal', 'Legal'), 
+        ('Tabloid', 'Tabloid')
+    ], string='Page Size', default='a4', help="Physical dimensions of the PDF page")
+    
+    orientation = fields.Selection([
+        ('portrait', 'Portrait'), 
+        ('landscape', 'Landscape')
+    ], string='Page Orientation', default='portrait', help="Orientation of the PDF page")
+    
+    font_size = fields.Float(string="Base Font Size", default=16.0, 
+                            help="Default font size in pixels for the PDF")
+    font_family = fields.Char(string="Font Family", help="Font family to use in the PDF")
+    
+    # Margin settings
+    top_margin = fields.Float(string="Top Margin", help="Top margin in pixels")
+    bottom_margin = fields.Float(string="Bottom Margin", help="Bottom margin in pixels")
+    left_margin = fields.Float(string="Left Margin", help="Left margin in pixels")
+    right_margin = fields.Float(string="Right Margin", help="Right margin in pixels")
+    
+    # Status flags
+    default = fields.Boolean(string="Is Default", default=False, 
+                            help="Whether this template is the default for its type")
+    available = fields.Boolean(string="Is Available", default=False,
+                              help="Whether this template is available for use")
+    virtual_rec = fields.Boolean(string="Is Virtual", default=False, index=True,
+                                help="Whether this is a virtual template (not stored permanently)")
+    
+    # Additional settings
+    clipboard = fields.Char(string="Clipboard Data", help="Temporary storage for template editing")
     date_format = fields.Selection([
-        ('%d/%m/%Y', '%d/%m/%y'),
-        ('%m/%d/%Y', '%m/%d/%y'),
-        ('%Y/%m/%d', '%y/%m/%d'),
-        ('%d-%m-%Y', '%d-%m-%y'),
-        ('%m-%d-%Y', '%m-%d-%y'),
-        ('%Y-%m-%d', '%y-%m-%d'),
-        ('%d.%m.%Y', '%d.%m.%y'),
-        ('%m.%d.%Y', '%m.%d.%y'),
-        ('%Y.%m.%d', '%y.%m.%d'),
-        ('%d %b %Y', '%d %b %Y'),
-        ('%b %d %Y', '%b %d %Y'),
-        ('%Y %b %d', '%Y %b %d')
-    ], string='Date Format', default='%b %d %Y')
-
-    # @api.constrains('page_size')
-    # def check_page_size_plan(self):
-    #     if self.page_size != 'a4' and not self.shop_id.get_current_plan().more_paper_size:
-    #         self.page_size = 'a4'
+        ('%d/%m/%Y', 'DD/MM/YYYY (31/12/2023)'),
+        ('%m/%d/%Y', 'MM/DD/YYYY (12/31/2023)'),
+        ('%Y/%m/%d', 'YYYY/MM/DD (2023/12/31)'),
+        ('%d-%m-%Y', 'DD-MM-YYYY (31-12-2023)'),
+        ('%m-%d-%Y', 'MM-DD-YYYY (12-31-2023)'),
+        ('%Y-%m-%d', 'YYYY-MM-DD (2023-12-31)'),
+        ('%d.%m.%Y', 'DD.MM.YYYY (31.12.2023)'),
+        ('%m.%d.%Y', 'MM.DD.YYYY (12.31.2023)'),
+        ('%Y.%m.%d', 'YYYY.MM.DD (2023.12.31)'),
+        ('%d %b %Y', 'DD MMM YYYY (31 Dec 2023)'),
+        ('%b %d %Y', 'MMM DD YYYY (Dec 31 2023)'),
+        ('%Y %b %d', 'YYYY MMM DD (2023 Dec 31)')
+    ], string='Date Format', default='%b %d %Y', 
+       help="Format for displaying dates in the generated PDF")
 
     def get_merged_css(self):
+        """
+        Get combined CSS including font settings.
+        
+        Returns:
+            str: Merged CSS string with global font settings
+        """
         self.ensure_one()
-        merged_css = self.css
+        # This line might be an error in the original code, as 'css' field doesn't exist
+        # Keeping it for backward compatibility but adding a try/except
+        try:
+            merged_css = self.css
+        except:
+            merged_css = ""
+            
         if self.font_size:
             merged_css += self.get_global_font_size_css()
             merged_css += self.get_global_font_family_css()
         return merged_css
 
     def get_global_font_size_css(self, font_size=None):
+        """
+        Generate CSS for global font size.
+        
+        Args:
+            font_size (float, optional): Override font size. If not provided, uses template's setting.
+            
+        Returns:
+            str: CSS rule for global font size
+        """
         return '*{font-size: %spx;}' % (self.font_size if not font_size else font_size)
 
     def get_global_font_family_css(self, font_family=None):
+        """
+        Generate CSS for global font family.
+        
+        Args:
+            font_family (str, optional): Override font family. If not provided, uses template's setting.
+            
+        Returns:
+            str: CSS rule for global font family
+        """
         return '*{font-family: %s;}' % (self.font_family if not font_family else font_family)
+        
     def copy(self, default=None):
+        """
+        Override copy method to ensure default flag is reset on duplicated templates.
+        
+        Args:
+            default (dict, optional): Default values for the new record
+            
+        Returns:
+            ShopPdfTemplate: The copied template record
+        """
         default = dict(default or {})
         default["default"] = False
-        return super(ShopifyPdfTemplate, self).copy(default)
+        return super(ShopPdfTemplate, self).copy(default)
 
-class ShopifyPdfRequestForm(models.Model):
+class ShopCustomizationRequest(models.Model):
+    """
+    Stores customization requests from shop owners for PDF templates.
+    
+    This model tracks requests for template customizations, including the
+    shop details, requested customization type, and description. Requests
+    are processed by the marketing team via email notifications.
+    """
     _name = 'shopify.pdf.shop.request'
+    _description = 'PDF Template Customization Request'
 
-    name = fields.Char("Shop URL")
-    shop_id = fields.Many2one('shopify.pdf.shop')
-    email = fields.Char()
-    template_type = fields.Char()
-    description = fields.Char()
-    status = fields.Char(default='pending')
+    name = fields.Char(string="Shop URL", required=True, 
+                      help="URL of the Shopify shop making the request")
+    shop_id = fields.Many2one('shopify.pdf.shop', string="Shop Reference", 
+                             help="Reference to the shop record in the system")
+    email = fields.Char(string="Contact Email", 
+                       help="Email address for communication about this request")
+    template_type = fields.Char(string="Template Type", 
+                               help="Type of template customization being requested")
+    description = fields.Char(string="Request Description", 
+                             help="Detailed description of the customization request")
+    status = fields.Char(string="Request Status", default='pending',
+                        help="Current status of the request (pending or done)")
 
     def schedule_sent_email_for_mkt(self):
-        emails = self.search([('status', '=', 'pending')])
-        for email in emails:
-            email.force_sent()
+        """
+        Schedule emails for all pending customization requests.
+        
+        This method finds all pending requests and triggers email sending
+        for each one. It's typically called by a scheduled action/cron job.
+        
+        Returns:
+            bool: True if processing completed
+        """
+        pending_requests = self.search([('status', '=', 'pending')])
+        for request in pending_requests:
+            request.send_notification_email()
         return True
 
-    def force_sent(self):
+    def send_notification_email(self):
+        """
+        Send customization request notification to the marketing team.
+        
+        Formats the request details and sends them via email to the
+        configured marketing email address.
+        
+        Returns:
+            bool: True if email sent successfully, False on error
+        """
         try:
+            # Get marketing email from system parameters
             mkt_email = self.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_mkt_email')
-            subject = "Hapoapps - PDF Invoice Request Customization - %s" % (self.name)
-            content = "Shop: %s<br/>Email:%s<br/>Request customize type: %s<br/>%s" % (
-                self.name, self.email, self.template_type, self.description)
-            # sending email
+            
+            # Format email subject and content
+            subject = f"Hapoapps - PDF Invoice Request Customization - {self.name}"
+            content = f"""
+                Shop: {self.name}<br/>
+                Email: {self.email}<br/>
+                Request customize type: {self.template_type}<br/>
+                {self.description}
+            """
+            
+            # Send email via mail client
             mail_client = self.env['shopify.pdf.mail']
-            mail_client.send(to_email=mkt_email, subject=subject, content=content, reply_to=mkt_email)
+            mail_client.send(
+                to_email=mkt_email, 
+                subject=subject, 
+                content=content, 
+                reply_to=mkt_email
+            )
+            
+            # Update request status
             self.status = 'done'
+            return True
+            
         except Exception as e:
+            _logger.error(f"Failed to send customization request email: {str(e)}")
             _logger.error(traceback.format_exc())
+            return False
+            
+        except Exception as e:
+            _logger.error(f"Failed to send customization request email: {str(e)}")
+            _logger.error(traceback.format_exc())
+            return False

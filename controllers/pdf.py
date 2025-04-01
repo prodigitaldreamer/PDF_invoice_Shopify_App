@@ -24,7 +24,7 @@ from odoo.tools import html_escape
 # Local application imports
 from ..oauth2.decorator import ensure_login
 from ..oauth2.auth import ShopifyHelper
-from ..app import PDF_FONTS_CSS_PATH
+from ..font import PDF_FONTS_CSS_PATH
 
 # Configure logging
 _logger = logging.getLogger(__name__)

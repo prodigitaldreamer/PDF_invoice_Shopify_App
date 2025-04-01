@@ -8,7 +8,7 @@ from ..oauth2.decorator import ensure_login
 
 _logger = logging.getLogger(__name__)
 import json
-from ..app import CUSTOM_FONTS
+from ..font import CUSTOM_FONTS
 import re
 
 class Main(http.Controller):
@@ -105,7 +105,7 @@ class Main(http.Controller):
                     'apps': [],
                     'partner_apps': []
                 },
-                'custom_fonts': CUSTOM_FONTS if CUSTOM_FONTS else [],
+                'custom_fonts': [],
                 'api_key': app_key,
             }
             shop = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env).shop_model
