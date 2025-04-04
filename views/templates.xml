@@ -21,7 +21,7 @@
                 </script>
                <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style.css"/>
                <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style-custom.css"/>
-                <meta name="shopify-api-key" content="87e74578b5674b3f8a3f100fdc640e93"/>
+                <meta name="shopify-api-key" content="ef9f16539e1c37d5d51e70ed634cfbf7"/>
                 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
                 <!-- <script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="0a35dc9d-32c4-43e8-b3a1-d927b0b87126";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script> -->
             </head>
@@ -86,7 +86,7 @@
                 <title>Drag and Drop PDF Invoice</title>
                 <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
                 <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style.css"/>
-                <meta name="shopify-api-key" content="b532f4655dbba6b411aa1b704520ed69"/>
+                <meta name="shopify-api-key" content="ef9f16539e1c37d5d51e70ed634cfbf7"/>
                 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
             </head>
             <body>

@@ -116,8 +116,6 @@ class ShopifyConnector(http.Controller):
             scope = [
                 "read_products",
                 "read_orders",
-                "read_script_tags",
-                "write_script_tags",
                 "read_themes",
                 "write_themes",
                 "read_draft_orders",
