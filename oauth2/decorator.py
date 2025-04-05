@@ -19,7 +19,7 @@ def shop_login_required(fn):
     def wrapper(*args, **kwargs):
         if not is_shop_login(check_access=True):
             return redirect(
-                request.env['ir.config_parameter'].sudo().get_param('web.base.url') + '/shopify/pdf/login?' + urlencode(
+                request.env['ir.config_parameter'].sudo().get_param('web.base.url') + '/shopify/order-printer/login?' + urlencode(
                     request.params))
         return fn(*args, **kwargs)
 

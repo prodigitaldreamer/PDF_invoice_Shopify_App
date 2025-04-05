@@ -23,12 +23,9 @@
     'data': [
         'security/ir.model.access.csv',
         'views/res_config_setting.xml',
-        'views/templates.xml',
-        # 'views/views.xml',
-        'views/shop.xml',
-        'views/shop_log.xml',
-        'views/mail.xml',
-        'data/data.xml',
+        'views/order_printer_templates.xml',
+        'views/shopify_shop.xml',
+        'views/shop_log.xml',   
     ],
     # only loaded in demonstration mode
     'demo': [

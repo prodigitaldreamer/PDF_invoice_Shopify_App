@@ -13,8 +13,8 @@ import re
 
 class Main(http.Controller):
 
-    @http.route('/pdf/main', type='http', auth='public', save_session=False)
-    def main(self):
+    @http.route(['/order-printer/main', '/order-printer/dashboard'], type='http', auth='public', save_session=False)
+    def render_dashboard(self):
         try:
             ensure_login()
             value = {
@@ -27,13 +27,11 @@ class Main(http.Controller):
                 'preview': {},
                 'live_support': True,
                 'custom_fonts': [],
-                'current_plan': {},
-                'all_plans': []
             }
             shop = None
             if 'shop_url_pdf' in request.session:
                 shop = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env).shop_model
-            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
+            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_key')
             if shop:
                 info, templates = self.get_value_setting(shop=shop)
                 # list_apps = shop.get_related_apps()
@@ -46,23 +44,21 @@ class Main(http.Controller):
                     'templates': templates,
                     'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
                     'list_apps': list_apps,
-                    'current_plan': shop.sudo().get_current_plan_data(),
-                    'all_plans': request.env['shopify.pdf.plan'].sudo().get_all_plans_data(),
                     'shop': shop.name,
                     'api_key': app_key,
-                    'setup_tasks': self.get_setup_tasks(shop)
+                    'setup_tasks': self.get_shop_setup_status(shop)
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value), 'api_key': app_key}, headers=headers)
         except Exception as e:
             # _logger.error(str(e))
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
-            return self.render_exception()
+            return self.render_error_page()
 
-    @http.route('/pdf/template/duplicate', type="json", auth='public', csrf=False, save_session=False)
-    def duplicate(self, **kw):
+    @http.route('/order-printer/template/duplicate', type="json", auth='public', csrf=False, save_session=False)
+    def duplicate_template(self, **kw):
         try:
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
@@ -80,20 +76,18 @@ class Main(http.Controller):
                 'status': True
             }
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
         return json.dumps({
             'status': False
         })
-
-    # '/pdf/templates/<int:id>/edit',
-    @http.route(['/pdf/templates', '/pdf/templates/<int:id>/<string:mode>', '/pdf/templates/<int:id>/<string:mode>/<string:shop>',
-                 '/pdf/templates/<string:mode>',
+    @http.route(['/order-printer/templates', '/order-printer/templates/<int:id>/<string:mode>', '/order-printer/templates/<int:id>/<string:mode>/<string:shop>',
+                 '/order-printer/templates/<string:mode>',
                  ], type='http', auth='public', save_session=False)
-    def templates(self, id=None, mode=None, shop=None):
+    def manage_templates(self, id=None, mode=None, shop=None):
         try:
             ensure_login()
-            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
+            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_key')
             value = {
                 'page': 'templates',
                 'all_templates': [],
@@ -116,15 +110,9 @@ class Main(http.Controller):
                     'info': info,
                     'templates': templates,
                     'all_templates': all_templates,
-                    'current_plan': shop.get_current_plan_data(),
                     'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
-                    'limit_request': shop.get_limit_request_status()
                 })
             template_info = {}
-            # if mode and mode == 'create':
-            #     value.update({'mode': 'edit'})
-            # if mode and mode == 'general':
-            #     value.update({'mode': 'general'})
             if id == 0:
                 value.update({'mode': mode, 'template_info': template_info})
                 template_info.update({
@@ -135,8 +123,8 @@ class Main(http.Controller):
                     'left_margin': '16.0',
                     'right_margin': '16.0',
                     'page_size': 'a4',
-                    'embed': '/pdf/invoice/' + str(0) + '/preview/load',
-                    'embed_clipboard': '/pdf/invoice/' + str(0) + '/preview/clipboard',
+                    'embed': '/order-printer/invoice/' + str(0) + '/preview/load',
+                    'embed_clipboard': '/order-printer/invoice/' + str(0) + '/preview/clipboard',
                 })
                 value.update({'template_info': template_info})
             elif id:
@@ -162,25 +150,25 @@ class Main(http.Controller):
                         'right_margin': str(tem.right_margin) if isinstance(tem.right_margin, float) else '16.0',
                         'date_format': tem.date_format if tem.date_format else '%d/%m/%y',
                         'default': tem.default,
-                        'embed': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/load?shop=' + shop.display_name,
-                        'embed_clipboard': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/clipboard',
+                        'embed': '/order-printer/invoice/' + str(shop.encode(tem.id)) + '/preview/load?shop=' + shop.display_name,
+                        'embed_clipboard': '/order-printer/invoice/' + str(shop.encode(tem.id)) + '/preview/clipboard',
                     })
 
                 else:
-                    return redirect('/pdf/templates')
+                    return redirect('/order-printer/templates')
                 value.update({'mode': mode, 'template_info': template_info})
 
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session['shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value), 'api_key': app_key}, headers=headers)
         except Exception as e:
             # print(e)
             # _logger.error(str(e))
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
-            return self.render_exception()
+            return self.render_error_page()
 
-    @http.route('/pdf/template/delete', type='json', auth='public', csrf=False, save_session=False)
-    def delete(self):
+    @http.route('/order-printer/template/delete', type='json', auth='public', csrf=False, save_session=False)
+    def delete_template(self):
         try:
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
@@ -191,27 +179,20 @@ class Main(http.Controller):
             model = request.env['shopify.pdf.shop.template'].sudo()
             templates = model.search([('id', 'in', ids), ('shop_id', '=', shop_model.id)])
             templates.unlink()
-            # if shop_model.default_template and shop_model.default_template != '':
-            #     if shop_model.decode(int(shop_model.default_template)) in ids:
-            #         shop_model.allow_frontend = False
-            #         shop_model.script_tag_action(action='remove')
-            # for template in templates:
-            #     if template.shop_id == shop_model.id:
-            #         template.sudo().unlink()
             templates = shop.get_all_shop_template()
             return {
                 'templates': templates,
                 'status': True
             }
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
         return {
             'status': False
         }
 
-    @http.route('/pdf/template/update/<string:type>', type='json', auth='public', csrf=False, save_session=False)
-    def create(self, type=None):
+    @http.route('/order-printer/template/update/<string:type>', type='json', auth='public', csrf=False, save_session=False)
+    def update_template(self, type=None):
         try:
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
@@ -287,14 +268,14 @@ class Main(http.Controller):
                 'mode': mode
             }
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
         return {
             'status': False
         }
 
-    @http.route('/pdf/templates/info/<int:id>', type='json', auth='public', save_session=False)
-    def set_info_templates(self, id):
+    @http.route('/order-printer/templates/info/<int:id>', type='json', auth='public', save_session=False)
+    def get_template_info(self, id):
         try:
             ensure_login()
             shop = request.env['shopify.pdf.shop'].sudo().search([('name', '=', request.session['shop_url_pdf'])])
@@ -308,8 +289,8 @@ class Main(http.Controller):
                     'left_margin': '16.0',
                     'right_margin': '16.0',
                     'page_size': 'a4',
-                    'embed': '/pdf/invoice/' + str(0) + '/preview/load',
-                    'embed_clipboard': '/pdf/invoice/' + str(0) + '/preview/clipboard',
+                    'embed': '/order-printer/invoice/' + str(0) + '/preview/load',
+                    'embed_clipboard': '/order-printer/invoice/' + str(0) + '/preview/clipboard',
                     'name': 'Untitled template',
                     'type': 'invoice',
                     'html': '',
@@ -336,8 +317,8 @@ class Main(http.Controller):
                     'left_margin': str(tem.left_margin) if isinstance(tem.left_margin, float) else '16.0',
                     'right_margin': str(tem.right_margin) if isinstance(tem.right_margin, float) else '16.0',
                     'date_format': tem.date_format if tem.date_format else '%d/%m/%y',
-                    'embed': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/load?shop=' + shop.display_name,
-                    'embed_clipboard': '/pdf/invoice/' + str(shop.encode(tem.id)) + '/preview/clipboard?shop=' + shop.display_name,
+                    'embed': '/order-printer/invoice/' + str(shop.encode(tem.id)) + '/preview/load?shop=' + shop.display_name,
+                    'embed_clipboard': '/order-printer/invoice/' + str(shop.encode(tem.id)) + '/preview/clipboard?shop=' + shop.display_name,
                     'default': tem.default if tem.default else False,
                 })
             return {
@@ -345,17 +326,17 @@ class Main(http.Controller):
                 'template_info': template_info,
             }
         except:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
             return {
                 'status': False
             }
 
-    @http.route('/pdf/settings', type='http', auth='public', save_session=False)
+    @http.route('/order-printer/settings', type='http', auth='public', save_session=False)
     def settings(self):
         try:
             ensure_login()
-            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
+            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_key')
             value = {
                 'page': 'settings',
                 'mode': 'set',
@@ -365,7 +346,6 @@ class Main(http.Controller):
                 'live_support': True,
                 'list_apps': [],
                 'custom_fonts': [],
-                'current_plan': {},
                 'api_key': app_key,
             }
             shop = None
@@ -376,24 +356,23 @@ class Main(http.Controller):
                 value.update({
                     'info': info,
                     'templates': templates,
-                    'current_plan': shop.get_current_plan_data(),
                     'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value),'api_key': app_key}, headers=headers)
         except Exception as e:
             # print(e)
             # _logger.error(str(e))
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
-            return self.render_exception()
+            return self.render_error_page()
 
-    @http.route('/pdf/email_notification', type='http', auth='public', save_session=False)
+    @http.route('/order-printer/email_notification', type='http', auth='public', save_session=False)
     def email_notification(self):
         try:
             ensure_login()
-            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
+            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_key')
             value = {
                 'page': 'Email Notification',
                 'mode': 'set',
@@ -403,7 +382,6 @@ class Main(http.Controller):
                 'live_support': True,
                 'list_apps': [],
                 'custom_fonts': [],
-                'current_plan': {},
                 'api_key': app_key,
             }
             shop = None
@@ -414,66 +392,18 @@ class Main(http.Controller):
                 value.update({
                     'info': info,
                     'templates': templates,
-                    'current_plan': shop.get_current_plan_data(),
                     'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
                 })
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
                 'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
+            return request.render('shopify_order_printer.main', {'config': json.dumps(value),'api_key': app_key}, headers=headers)
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
-            return self.render_exception()
+            return self.render_error_page()
 
-    @http.route('/pdf/accounts', type='http', auth='public', save_session=False)
-    def accounts(self):
-        try:
-            ensure_login()
-            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
-            value = {
-                'page': 'accounts',
-                'mode': 'set',
-                'template_info': {},
-                'all_templates': [],
-                'info': {},
-                'templates': {},
-                'preview': {},
-                'live_support': True,
-                'custom_fonts': [],
-                'current_plan': {},
-                'all_plans': [],
-                'api_key': app_key
-            }
-            shop = None
-            if 'shop_url_pdf' in request.session:
-                shop = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env).shop_model
-            if shop:
-                info, templates = self.get_value_setting(shop=shop)
-                # list_apps = shop.get_related_apps()
-                list_apps = []
-                if not shop.install:
-                    shop.install = True
-                # shop.init_default_template()
-                value.update({
-                    'info': info,
-                    'templates': templates,
-                    'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
-                    'list_apps': list_apps,
-                    'current_plan': shop.sudo().get_current_plan_data(),
-                    'all_plans': request.env['shopify.pdf.plan'].sudo().get_all_plans_data(),
-                })
-            headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-                'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
-        except Exception as e:
-            # print(e)
-            # _logger.error(str(e))
-            self.create_shop_log(log=traceback.format_exc())
-            _logger.error(traceback.format_exc())
-            return self.render_exception()
-
-    @http.route('/pdf/save/settings', type='json', auth='public', csrf=False, save_session=False)
-    def save(self):
+    @http.route('/order-printer/save/settings', type='json', auth='public', csrf=False, save_session=False)
+    def save_settings(self):
         try:
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
@@ -498,8 +428,6 @@ class Main(http.Controller):
                     shop_model.shop_zip = params['zip']
                 if 'qrcode' in params:
                     shop_model.shop_qr_code = params['qrcode']
-                if 'allow_backend' in params:
-                    shop_model.allow_backend = params['allow_backend']
                 if 'default_template' in params:
                     shop_model.default_template = str(params['default_template'])
                 if 'email_notify_template' in params:
@@ -519,143 +447,12 @@ class Main(http.Controller):
                 return True
             return False
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
             return False
 
-    @http.route(['/pdf/emailautomation', '/pdf/emailautomation/<int:id>/edit'], type='http', auth='public',
-                save_session=False)
-    def emailautomation(self, id=None):
-        try:
-            ensure_login()
-            app_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
-            value = {
-                'page': 'emailautomation',
-                'all_templates': [],
-                'mode': 'set',
-                'template_info': {},
-                'preview': {},
-                'live_support': True,
-                'list_apps': {
-                    'apps': [],
-                    'partner_apps': []
-                },
-                'custom_fonts': [],
-                'email_automation_settings': {
-                },
-                'current_plan': {},
-                'email_month_counts': 0,
-                'api_key': app_key,
-            }
-            shop = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env).shop_model
-            # if not shop.get_current_plan().automation_email:
-            #     raise ValueError('You need to subscribe to our plan first')
-            if shop:
-                info, templates = self.get_value_setting(shop=shop)
-                value.update({
-                    'info': info,
-                    'templates': templates,
-                    'current_plan': shop.get_current_plan_data(),
-                    'email_month_counts': shop.get_email_counts_current_month(),
-                    'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
-                })
-
-                emails = shop.sudo().get_email_automation_settings()
-                value.update({
-                    'email_automation_settings': emails
-                })
-
-                if id:
-                    email_info = shop.sudo().get_email_automation_setting(id=id)
-                    value.update({'mode': 'edit', 'email_info': email_info})
-            else:
-                raise Exception('Could not find your current shop')
-
-            headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-                'shop_url_pdf'] + " https://admin.shopify.com;"}
-            return request.render('shopify_order_printer.main', {'config': json.dumps(value)}, headers=headers)
-        except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
-            _logger.error(traceback.format_exc())
-            return self.render_exception()
-
-    @http.route('/pdf/emailautomation/save', type='json', auth='public', csrf=False, save_session=False)
-    def emailautomation_save(self):
-        try:
-            ensure_login()
-            Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
-            shop_model = Shopify.shop_model
-            params = json.loads(request.httprequest.data).get('data')
-            model = request.env['shopify.pdf.email.automation'].sudo()
-            data = {
-                'enable_email_automation': params['enable_email_automation'],
-                'email_reply_to': params['email_reply_to'],
-                'bcc_to': params['bcc_to'],
-                'email_tags': params['email_tags'],
-                'email_file_name': params['email_file_name'],
-                'email_subject': params['email_subject'],
-                'custom_email_message': params['custom_email_message'],
-                'test_email': params['test_email'],
-            }
-
-            email = model.search([
-                ('id', '=', params['id']), ('shop_id', '=', shop_model.id)],
-                limit=1)
-            email.write(data)
-
-            return {
-                'status': True,
-                'record': str(params['id']),
-                'mode': 'edit'
-            }
-        except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
-            _logger.error(traceback.format_exc())
-        return {
-            'status': False
-        }
-
-    @http.route('/pdf/submit/review', type='json', auth='public', csrf=False, save_session=False)
-    def save_review(self):
-        try:
-            ensure_login()
-            Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
-            shop_model = Shopify.shop_model
-            params = request.params['data']
-            if 'rate' in params and params['rate'] != 0:
-                shop_model.rating = params['rate']
-            if 'review' in params:
-                shop_model.review = params['review']
-            return True
-        except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
-            _logger.error(traceback.format_exc())
-            return False
-
-    @http.route('/pdf/get/template', type='json', auth='public', csrf=False, save_session=False)
-    def get_template(self):
-        try:
-            ensure_login()
-            Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
-            shop_model = Shopify.shop_model
-            params = json.loads(request.httprequest.data)
-            template_load = None
-            for template in shop_model.templates:
-                if template.id == shop_model.decode(int(params['id'])):
-                    template_load = template
-                    break
-            if template_load is not None:
-                html = template_load.html if template_load.html else ''
-                json_data = template_load.json if template_load.json else ''
-                return {"status": True, "data": {'html': html, 'json': json.loads(json.dumps(json_data))}}
-            return {"status": False}
-        except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
-            _logger.error(traceback.format_exc())
-            return {"status": False}
-
-    @http.route('/pdf/templateDefault', type='json', auth='public', csrf=False, save_session=False)
-    def reset_template(self):
+    @http.route('/order-printer/templateDefault', type='json', auth='public', csrf=False, save_session=False)
+    def restore_default_template(self):
         try:
             ensure_login()
             templates = request.env['shopify.pdf.template.default'].sudo().search([])
@@ -668,12 +465,12 @@ class Main(http.Controller):
                 'templates': value,
             }
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
             return [False, {}]
 
-    @http.route('/pdf/set_default_templates', type='json', auth='public', csrf=False, save_session=False)
-    def set_default_templates(self):
+    @http.route('/order-printer/set_default_templates', type='json', auth='public', csrf=False, save_session=False)
+    def configure_default_templates(self):
         try:
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
@@ -737,7 +534,7 @@ class Main(http.Controller):
                 'message': 'Default templates updated successfully'
             }
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
             return {
                 'status': False,
@@ -749,7 +546,7 @@ class Main(http.Controller):
         templates = shop.get_shop_template()
         return info, templates
 
-    def create_shop_log(self, log=None):
+    def log_shop_error(self, log=None):
         shop_name = 'shop_url not in session'
         if 'shop_url_pdf' in request.session:
             shop = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env).shop_model
@@ -763,21 +560,8 @@ class Main(http.Controller):
         request.env['shopify.pdf.shop.log'].sudo().create(log)
         return True
 
-    @http.route('/pdf/get/data', type='http', auth='user')
-    def get_shop_data(self):
-        try:
-            shops = request.env['shopify.pdf.shop'].sudo().search([('data_fetched', '=', False)], limit=50)
-            for shop in shops:
-                shop.get_data()
-            if len(shops) == 0:
-                return 'Clear'
-            return 'Done'
-        except Exception as e:
-            _logger.error(traceback.format_exc())
-            return str(e)
-
-    @http.route('/request/submit', type='json', auth='public', csrf=False, save_session=False)
-    def save_request(self):
+    @http.route('/order-printer/request/submit', type='json', auth='public', csrf=False, save_session=False)
+    def submit_customization_request(self):
         try:
             ensure_login()
             Shopify = ShopifyHelper(shop_url=request.session['shop_url_pdf'], env=request.env)
@@ -790,19 +574,14 @@ class Main(http.Controller):
                 'template_type': params['type'],
                 'description': params['description'],
             }
-            record = request.env['shopify.pdf.shop.request'].sudo().create(request_data)
-            if record:
-                return {
-                    'status': True
-                }
         except Exception as e:
             _logger.error(traceback.format_exc())
         return {
             'status': False
         }
 
-    @http.route('/pdf/setupCheck', type='http', auth='public', csrf=False, save_session=False)
-    def setup_check(self, page):
+    @http.route('/order-printer/setupCheck', type='http', auth='public', csrf=False, save_session=False)
+    def update_setup_status(self, page):
         ensure_login()
         try:
             store = request.env['shopify.pdf.shop'].sudo().search([('name', '=', request.session['shop_url_pdf'])],
@@ -819,7 +598,7 @@ class Main(http.Controller):
                 'status': False
             }
 
-    @http.route('/pdf/save/task', type='json', auth='public', csrf=False, save_session=False)
+    @http.route('/order-printer/save/task', type='json', auth='public', csrf=False, save_session=False)
     def save_task_status(self):
         try:
             ensure_login()
@@ -851,14 +630,14 @@ class Main(http.Controller):
                 'message': 'Shop not found'
             }
         except Exception as e:
-            self.create_shop_log(log=traceback.format_exc())
+            self.log_shop_error(log=traceback.format_exc())
             _logger.error(traceback.format_exc())
             return {
                 'status': False,
                 'message': 'Error updating task status'
             }
 
-    def get_setup_tasks(self, shop):
+    def get_shop_setup_status(self, shop):
         setup_tasks = {
             'check_infor': shop.check_infor,
             'check_print_button': shop.check_print_button,
@@ -868,9 +647,9 @@ class Main(http.Controller):
         }
         return setup_tasks
 
-    def render_exception(self):
+    def render_error_page(self):
         headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
             'shop_url_pdf'] + " https://admin.shopify.com;"}
         return request.render('shopify_order_printer.exception', {
-            'reset_action': '/shopify/pdf/reset'
+            'reset_action': '/shopify/order-printer/reset'
         }, headers=headers)

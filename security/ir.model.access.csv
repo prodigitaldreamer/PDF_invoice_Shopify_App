@@ -2,12 +2,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_shopify_pdf_shop,shopify_pdf_shop,model_shopify_pdf_shop,base.group_user,1,0,0,0
 access_shopify_pdf_shop_template,shopify_pdf_shop_template,model_shopify_pdf_shop_template,base.group_user,1,0,0,0
 access_shopify_pdf_shop_log,shopify_pdf_shop_log,model_shopify_pdf_shop_log,base.group_user,1,0,0,0
-access_shopify_pdf_plan,shopify_pdf_plan,model_shopify_pdf_plan,base.group_user,1,0,0,0
-access_shopify_pdf_email_automation,shopify_pdf_email_automation,model_shopify_pdf_email_automation,base.group_user,1,0,0,0
-access_shopify_pdf_registry,shopify_pdf_registry,model_shopify_pdf_registry,base.group_user,1,0,0,0
-access_shopify_pdf_shop_request,shopify_pdf_shop_request,model_shopify_pdf_shop_request,base.group_user,1,1,0,0
-
-access_shopify_pdf_shop_view_log,shopify_pdf_view_log,model_shopify_pdf_view_log,base.group_user,1,1,1,1
 access_shopify_pdf_template_default,shopify_pdf_template_default,model_shopify_pdf_template_default,base.group_user,1,1,1,1
-
 access_shopify_pdf_order,shopify_pdf_order,model_shopify_pdf_order,base.group_user,1,1,1,1

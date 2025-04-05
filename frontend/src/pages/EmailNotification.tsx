@@ -241,7 +241,7 @@ const EmailNotification: React.FC = () => {
 
     // Create email link generator function similar to _email_link_download
     const generateEmailLinkCode = useCallback((template: string, text: string) => {
-        return `<a target="_blank" href="{{ shop.url }}/apps/order-printer/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
+        return `<a target="_blank" href="{{ shop.url }}/apps/order-printer/order-printer/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
     }, []);
 
     // Collapsible state
@@ -294,7 +294,7 @@ const EmailNotification: React.FC = () => {
             };
 
             // Call the API to save settings
-            const response = await axios.post('/pdf/save/settings', {data});
+            const response = await axios.post('/order-printer/save/settings', {data});
 
             if (response.data) {
                 toggleToast('Settings saved successfully');

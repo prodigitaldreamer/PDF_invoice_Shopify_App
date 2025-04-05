@@ -102,12 +102,12 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
       await sleep(1500);
       
       if (response.data.result) {
-        if (action === '/pdf/template/delete') {
+        if (action === '/order-printer/template/delete') {
           const newTemplates = templates.filter(template => 
             !data.ids.includes(String(template.id))
           );
           setTemplates(newTemplates);
-        } else if (action === '/pdf/template/duplicate') {
+        } else if (action === '/order-printer/template/duplicate') {
           setTemplates(response.data.result.templates);
         }
         
@@ -404,13 +404,13 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
     if (onEditTemplate) {
       onEditTemplate(id);
     } else {
-      window.location.pathname = `/pdf/templates/${id}/edit/${config?.info?.shop || ''}`;
+      window.location.pathname = `/order-printer/templates/${id}/edit/${config?.info?.shop || ''}`;
     }
     setActivePopoverId(null);
   };
 
   const handleDuplicateTemplate = (id: string) => {
-    templateAction('/pdf/template/duplicate', { 
+    templateAction('/order-printer/template/duplicate', { 
       ids: [id],
       shop: config?.info?.shop 
     }, 'Template duplicated successfully');
@@ -444,7 +444,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
       };
       
       // Call the new API endpoint
-      const response = await axios.post('/pdf/set_default_templates', { data });
+      const response = await axios.post('/order-printer/set_default_templates', { data });
       console.log('Response:', response);
       
       if (response.data.result.status) {
@@ -523,7 +523,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
         }));
         
         // Call the API with shop information
-        const response = await axios.post('/pdf/set_default_templates', { 
+        const response = await axios.post('/order-printer/set_default_templates', { 
           data: {
             templates: templateData,
             shop: shop  // Add shop information to the request
@@ -638,11 +638,11 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   const emptyStateMarkup = (
     <EmptyState
       heading="Looks like you have no templates here"
-      image="/shopify_order_printer/static/description/images/box.png"
+      image="/shopify_order_printer/static/img/box.png"
       action={{
         content: 'Create new template',
         onAction: () => {
-          window.location.pathname = `/pdf/templates/0/edit/${config?.info?.shop || ''}`;
+          window.location.pathname = `/order-printer/templates/0/edit/${config?.info?.shop || ''}`;
         }
       }}
       secondaryAction={{
@@ -657,7 +657,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   // Handle delete confirmation
   const handleConfirmDelete = () => {
     const idsToDelete = selectedResources.length ? selectedResources : itemToDelete;
-    templateAction('/pdf/template/delete', { 
+    templateAction('/order-printer/template/delete', { 
       ids: idsToDelete,
       shop: config?.info?.shop
     }, 'Template deleted successfully');
@@ -677,7 +677,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
               onEditTemplate("0"); // Use "0" to indicate new template
             } else {
               // Only fall back to direct URL navigation if the prop isn't available
-              window.location.pathname = `/pdf/templates/0/edit/${config?.info?.shop || ''}`;
+              window.location.pathname = `/order-printer/templates/0/edit/${config?.info?.shop || ''}`;
             }
           }
         }}

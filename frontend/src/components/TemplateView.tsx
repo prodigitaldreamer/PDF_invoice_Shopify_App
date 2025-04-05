@@ -96,7 +96,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
 
     try {
       updateState({ isLoading: true, error: null }, false);
-      const response = await axios.post(`/pdf/templates/info/${templateId}`, {
+      const response = await axios.post(`/order-printer/templates/info/${templateId}`, {
         data: {
           shop: window.config?.info?.shop
         }
@@ -176,7 +176,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
       // Determine the correct API endpoint type based on whether we're editing or creating
       const apiType = templateId ? 'edit' : '';
       
-      const response = await axios.post(`/pdf/template/update/${apiType}`, {
+      const response = await axios.post(`/order-printer/template/update/${apiType}`, {
         data: {
           info: templateData,
           shop: window.config?.info?.shop
@@ -214,7 +214,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
     
     // Otherwise, directly navigate to templates page with shop parameter
     const shopName = window.config?.info?.shop || '';
-    window.location.href = shopName ? `/pdf/templates?shop=${shopName}` : '/pdf/templates';
+    window.location.href = shopName ? `/order-printer/templates?shop=${shopName}` : '/order-printer/templates';
   }, [onBack]);
 
   const handleBack = () => {
@@ -223,10 +223,10 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
     
     // Redirect with shop parameter to maintain session
     if (shopName) {
-      window.location.href = `/pdf/templates?shop=${shopName}`;
+      window.location.href = `/order-printer/templates?shop=${shopName}`;
     } else {
       // Fallback to regular navigation if shop isn't available
-      window.location.href = '/pdf/templates';
+      window.location.href = '/order-printer/templates';
     }
   };
 
@@ -235,7 +235,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
 
     try {
       updateState({ isLoading: true, error: null }, false);
-      const response = await axios.post('/pdf/template/delete', {
+      const response = await axios.post('/order-printer/template/delete', {
         data: {
           ids: [templateId],
           shop: window.config?.info?.shop
@@ -246,7 +246,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
         if (onBack) {
           onBack();
         } else {
-          window.location.href = `/pdf/templates/?shop=${window.config?.info?.shop || ''}`;
+          window.location.href = `/order-printer/templates/?shop=${window.config?.info?.shop || ''}`;
         }
       } else {
         updateState({ error: 'Failed to delete template' }, false);
@@ -410,7 +410,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
             if (onBack) {
               onBack();
             } else {
-              window.location.href = `/pdf/templates/${window.config?.info?.shop || ''}`;
+              window.location.href = `/order-printer/templates/${window.config?.info?.shop || ''}`;
             }
           }
         }}

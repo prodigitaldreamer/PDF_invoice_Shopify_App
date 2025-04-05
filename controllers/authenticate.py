@@ -94,11 +94,11 @@ root = http.Application()
 
 class ShopifyConnector(http.Controller):
 
-    @http.route('/shopify/pdf', type='http', auth="public")
+    @http.route('/shopify/order-printer', type='http', auth="public")
     def index(self):
         @shop_login_required
         def registry():
-            redirect_url = '/pdf/main?shop=' + request.session['shop_url_pdf']
+            redirect_url = '/order-printer/dashboard?shop=' + request.session['shop_url_pdf']
             if request.httprequest.referrer == 'https://partners.shopify.com/' and 'shop_url_pdf' in request.session:
                 return self.redirect_app_page()
             else:
@@ -106,7 +106,7 @@ class ShopifyConnector(http.Controller):
 
         return registry()
 
-    @http.route('/shopify/pdf/login', type='http', auth="public")
+    @http.route('/shopify/order-printer/login', type='http', auth="public")
     def login(self):
         try:
             if 'shop' not in request.params:
@@ -122,11 +122,11 @@ class ShopifyConnector(http.Controller):
                 "write_orders",
                 "read_inventory"
             ]
-            env = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_environment')
+            env = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_environment')
             if env == 'prod':
                 scope.append("read_all_orders")
 
-            call_back = request.env['ir.config_parameter'].sudo().get_param('web.base.url') + '/shopify/pdf/auth'
+            call_back = request.env['ir.config_parameter'].sudo().get_param('web.base.url') + '/shopify/order-printer/auth'
             if 'redirect_action' in request.params:
                 shop_model = ShopifyHelper(shop, env=request.env).shop_model
                 if shop_model:
@@ -149,7 +149,7 @@ class ShopifyConnector(http.Controller):
             _logger.error(traceback.format_exc())
             return e.__class__.__name__ + ': ' + str(e)
 
-    @http.route('/shopify/pdf/auth', auth='public')
+    @http.route('/shopify/order-printer/auth', auth='public')
     def shopify(self, **kw):
         if 'shop' not in request.params:
             raise Exception('Missing shop url parameter')
@@ -160,7 +160,6 @@ class ShopifyConnector(http.Controller):
         request.session['shop_url_pdf'] = shop
         session = ShopifyHelper(shop, env=request.env).auth()
         params = request.params
-        # redirect_url = request.env['ir.config_parameter'].sudo().get_param('web.base.url') + '/pdf/main'
         try:
             token = session.request_token(params)
             shop_model = request.env['shopify.pdf.shop'].sudo().search([('name', '=', shop)], limit=1)
@@ -172,12 +171,10 @@ class ShopifyConnector(http.Controller):
                     'allow_frontend': False,
                 })
             else:
-                free_plan = request.env['shopify.pdf.plan'].sudo().get_free_plan()
                 new_shop = request.env['shopify.pdf.shop'].sudo().create(
-                    {'name': shop, 'token': token, 'status': True, 'force_update_scope': False, 'plan': free_plan.id})
+                    {'name': shop, 'token': token, 'status': True, 'force_update_scope': False})
                 if new_shop:
                     new_shop.init_default_template()
-                    new_shop.script_tag_action("add")
 
             Shopify = ShopifyHelper(shop_url=shop, token=token, env=request.env)
             Shopify.set_shop_info()
@@ -187,28 +184,15 @@ class ShopifyConnector(http.Controller):
                                                          path="/shopify/webhook/" + shop + '/' + "s_shopify_order_printer" + '/order_create')
             Shopify.get_shop_model().add_webhook_to_shop(topic='orders/paid',
                                                          path="/shopify/webhook/" + shop + '/' + "s_shopify_order_printer" + '/order_paid')
-
-            # redirect_url = redirect_url
-            # if Shopify.shop_model and Shopify.shop_model.launch_url:
-            #     redirect_url = Shopify.shop_model.launch_url
-            # if Shopify.shop_model.redirect_action and Shopify.shop_model.is_reload_session:
-            #     redirect_url = Shopify.shop_model.redirect_action
-            #     # reset session status
-            #     Shopify.shop_model.is_reload_session = False
         except Exception as e:
             _logger.error(traceback.format_exc())
             shopify_helper = ShopifyHelper(shop_url=shop, env=request.env)
             # request.session.pop('shop_url', None)
             shopify_helper.reset()
             return e.__class__.__name__ + ': ' + str(e) + ' .Please try again!'
-        # redirect
-        # return self.redirect_app_page(shop=shop)
-        # force_update_scope = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.force_update_scopes')
-        # if force_update_scope:
-        #     request.env['ir.config_parameter'].set_param('shopify_pdf.force_update_scopes', False)
         return self.redirect_app_page()
 
-    @http.route('/shopify/pdf/reset', type='http', auth='public', methods=['POST'])
+    @http.route('/shopify/order-printer/reset', type='http', auth='public', methods=['POST'])
     def reset(self):
         shop_url = None
         if 'shop_url_pdf' in request.session:
@@ -220,21 +204,21 @@ class ShopifyConnector(http.Controller):
         except Exception as e:
             # _logger.error(str(e))
             _logger.error(traceback.format_exc())
-        return redirect('/shopify/pdf?' + urlencode({'shop': shop_url}))
+        return redirect('/shopify/order-printer?' + urlencode({'shop': shop_url}))
 
     def redirect_app_page(self, shop=None):
-        api_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key')
+        api_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_key')
         shop_url = request.session['shop_url_pdf']
-        redirect_url = '/pdf/main?shop=' + shop_url
+        redirect_url = '/order-printer/dashboard?shop=' + shop_url
         admin_url = f'https://admin.shopify.com/store/{shop_url.replace(".myshopify.com", "")}'
         return redirect(admin_url + f"/apps/{api_key}{redirect_url}")
 
     # Shopify app redact
-    @http.route('/shopify/pdf/customers_data_request', type='json', auth="public", csrf=False, save_session=False)
+    @http.route('/shopify/order-printer/customers_data_request', type='json', auth="public", csrf=False, save_session=False)
     def customers_data_request(self):
         try:
             request_data = json.loads(request.httprequest.data)
-            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
             verify = self.verify_webhook(request.httprequest.data.decode("utf-8"),
                                          request.httprequest.headers.get('X-Shopify-Hmac-Sha256'), secret_key)
             if verify:
@@ -247,10 +231,10 @@ class ShopifyConnector(http.Controller):
         except Exception:
             _logger.error(traceback.format_exc())
 
-    @http.route('/shopify/pdf/customers_redact', type='json', auth="public", csrf=False, save_session=False)
+    @http.route('/shopify/order-printer/customers_redact', type='json', auth="public", csrf=False, save_session=False)
     def customers_redact(self):
         try:
-            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
             verify = self.verify_webhook(request.httprequest.data.decode("utf-8"),
                                          request.httprequest.headers.get('X-Shopify-Hmac-Sha256'), secret_key)
             if verify:
@@ -262,11 +246,11 @@ class ShopifyConnector(http.Controller):
         except Exception:
             _logger.error(traceback.format_exc())
 
-    @http.route('/shopify/pdf/shop_redact', type='json', auth="public", csrf=False, save_session=False)
+    @http.route('/shopify/order-printer/shop_redact', type='json', auth="public", csrf=False, save_session=False)
     def shop_redact(self):
         try:
             data = json.loads(request.httprequest.data)
-            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
             verify = self.verify_webhook(request.httprequest.data.decode("utf-8"),
                                          request.httprequest.headers.get('X-Shopify-Hmac-Sha256'), secret_key)
             if data.get('shop_domain') and verify:
@@ -293,7 +277,7 @@ class ShopifyConnector(http.Controller):
     @http.route('/shopify/webhook/<string:shop>/s_shopify_order_printer/app_uninstalled', type='json', auth="public")
     def uninstall_webhook(self, shop=None):
         try:
-            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
             verify = self.verify_webhook(request.httprequest.data.decode("utf-8"),
                                          request.httprequest.headers.get('X-Shopify-Hmac-Sha256'), secret_key)
             if shop is not None and verify:
@@ -315,7 +299,7 @@ class ShopifyConnector(http.Controller):
     @http.route('/shopify/webhook/<string:shop>/s_shopify_order_printer/order_create', type='json', auth="public")
     def order_create(self, shop=None):
         try:
-            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
             verify = self.verify_webhook(request.httprequest.data.decode("utf-8"),
                                          request.httprequest.headers.get('X-Shopify-Hmac-Sha256'), secret_key)
             if shop is not None and verify:
@@ -331,7 +315,7 @@ class ShopifyConnector(http.Controller):
     @http.route('/shopify/webhook/<string:shop>/s_shopify_order_printer/order_paid', type='json', auth="public")
     def order_paid(self, shop=None):
         try:
-            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            secret_key = request.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
             verify = self.verify_webhook(request.httprequest.data.decode("utf-8"),
                                          request.httprequest.headers.get('X-Shopify-Hmac-Sha256'), secret_key)
             if shop is not None and verify:

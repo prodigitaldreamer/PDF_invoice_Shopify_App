@@ -148,13 +148,13 @@ const Home: React.FC = () => {
   const handleTaskClick = (taskId: number) => {
     // Check which task was clicked and navigate to appropriate section
     if (taskId === 1) {
-      window.location.href = '/pdf/settings?section=store-info';
+      window.location.href = '/order-printer/settings?section=store-info';
     } else if (taskId === 2) {
-      window.location.href = '/pdf/settings?section=print-button';
+      window.location.href = '/order-printer/settings?section=print-button';
     } else if (taskId === 3) {
-      window.location.href = '/pdf/settings?section=email-notification';
+      window.location.href = '/order-printer/settings?section=email-notification';
     } else if (taskId === 4) {
-      window.location.href = '/pdf/settings?section=invoice-number';
+      window.location.href = '/order-printer/settings?section=invoice-number';
     }
   };
 
@@ -186,7 +186,7 @@ const Home: React.FC = () => {
     };
     
     // Save the task status to the backend using axios
-    axios.post('/pdf/save/task', {
+    axios.post('/order-printer/save/task', {
       data: requestData  // Wrap in 'data' property as requested
     })
     .then(response => {

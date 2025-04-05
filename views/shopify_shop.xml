@@ -1,20 +1,9 @@
 <odoo>
     <data>
-        <record id='shopify_pdf_shop_action' model='ir.actions.act_window'>
-            <field name="name">Shopify PDF Shops</field>
+        <record id='shopify_order_printer_shop_action' model='ir.actions.act_window'>
+            <field name="name">Shopify Order Printer</field>
             <field name="res_model">shopify.pdf.shop</field>
             <field name="view_mode">tree,form</field>
-        </record>
-        <record id="shopify_pdf_shop_view_tree" model="ir.ui.view">
-            <field name="name">Shopify PDF Shops</field>
-            <field name="model">shopify.pdf.shop</field>
-            <field name="arch" type="xml">
-                <tree create='false'>
-                    <field name="name"/>
-                    <field name="timezone"/>
-                    <field name="create_date"/>
-                </tree>
-            </field>
         </record>
 
         <record id="shopify_shop_view_form" model="ir.ui.view">
@@ -23,9 +12,7 @@
             <field name="arch" type="xml">
                 <form create='false'>
                     <sheet>
-                        <!--                        <field name="image_128" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>-->
                         <button name="get_data" string="Get Data" type="object" class="btn-primary"/>
-                        <button name="force_change_script" string="Change Script" type="object" class="btn-primary"/>
                         <group>
                             <group>
                                 <field name="name"/>
@@ -33,8 +20,6 @@
                                 <field name="email"/>
                                 <field name="country"/>
                                 <field name="install"/>
-                                <field name="plan"/>
-                                <field name="plan_status"/>
                                 <field name="rating"/>
                                 <field name="review"/>
                                 <field name="currency_format"/>
@@ -45,10 +30,8 @@
                                 <field name="shop_company_name"/>
                                 <field name="shop_vat"/>
                                 <field name="shop_zip"/>
-                                <!--                                <field name="shop_qr_code"/>-->
                                 <field name="shop_phone"/>
                                 <field name="shop_email"/>
-                                <field name="allow_backend"/>
                                 <field name="allow_frontend"/>
                                 <field name="is_allow_frontend"/>
                                 <field name="is_open_template_setting"/>
@@ -68,20 +51,12 @@
                                 </tree>
                             </field>
                         </group>
-                        <group>
-                            <field name="email_automations">
-                                <tree>
-                                    <field name="email_reply_to"/>
-                                    <field name="email_tags"/>
-                                </tree>
-                            </field>
-                        </group>
                     </sheet>
                 </form>
             </field>
         </record>
         <record id="shopify_shop_view__template_form" model="ir.ui.view">
-            <field name="name">Shopify Shop Template</field>
+            <field name="name">Shopify Template</field>
             <field name="model">shopify.pdf.shop.template</field>
             <field name="arch" type="xml">
                 <form create='false'>
@@ -126,8 +101,8 @@
                 </search>
             </field>
         </record>
-        <menuitem name="Shopify PDF Shop" id="pdf_base_menu"/>
-        <menuitem id="shopify_pdf_shop" name="Shop" parent="pdf_base_menu" sequence="1" action="shopify_pdf_shop_action"/>
+        <menuitem name="Shopify Order Printer" id="order_printer_menu"/>
+        <menuitem id="shopify_shop" name="Shopify Shop" parent="order_printer_menu" sequence="1" action="shopify_order_printer_shop_action"/>
 
         <record id="shopify_pdf_invoice_config_settings_action" model="ir.actions.act_window">
             <field name="name">Settings</field>
@@ -140,81 +115,12 @@
         </record>
         <menuitem name="Settings"
                   id="shopify_pdf_invoice_setting_menu"
-                  parent="pdf_base_menu"
+                  parent="order_printer_menu"
                   action="shopify_pdf_invoice_config_settings_action"
                   sequence="50"/>
 
-        <record id="shopify_pdf_shop_plan_history_tree" model="ir.ui.view">
-            <field name="name">Shopify Shop Plan</field>
-            <field name="model">shopify.pdf.registry</field>
-            <field name="arch" type="xml">
-                <tree>
-                    <field name="name"/>
-                    <field name="shop_id"/>
-                    <field name="plan_id"/>
-                    <field name="create_date"/>
-                </tree>
-            </field>
-        </record>
-        <record id="shopify_pdf_shop_action_plan" model="ir.actions.act_window">
-            <field name="name">Shop PDF Plan</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">shopify.pdf.registry</field>
-            <field name="view_mode">tree,form</field>
-        </record>
-        <menuitem id="shopify_pdf_shop_plan_history" name="Shop Plan Registry" parent="pdf_base_menu" sequence="15" action="shopify_pdf_shop_action_plan"/>
-
-        <record id="shopify_pdf_shop_request_tree" model="ir.ui.view">
-            <field name="name">Shopify Shop Request</field>
-            <field name="model">shopify.pdf.shop.request</field>
-            <field name="arch" type="xml">
-                <tree>
-                    <field name="name"/>
-                    <field name="email"/>
-                    <field name="shop_id"/>
-                    <field name="status"/>
-                    <field name="create_date"/>
-                </tree>
-            </field>
-        </record>
-        <record id="shopify_pdf_shop_request_form" model="ir.ui.view">
-            <field name="name">Shopify Shop Request</field>
-            <field name="model">shopify.pdf.shop.request</field>
-            <field name="arch" type="xml">
-                <form>
-                    <sheet>
-                        <group>
-                            <field name="name"/>
-                            <field name="shop_id"/>
-                            <field name="status"/>
-                            <field name="create_date"/>
-                            <field name="email"/>
-                            <field name="template_type"/>
-                            <field name="description"/>
-                        </group>
-                    </sheet>
-                </form>
-            </field>
-        </record>
-        <record id="shopify_pdf_shop_action_request" model="ir.actions.act_window">
-            <field name="name">Shop PDF Request</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">shopify.pdf.shop.request</field>
-            <field name="view_mode">tree,form</field>
-        </record>
-        <menuitem id="shopify_pdf_shop_request" name="Shop Request" parent="pdf_base_menu" sequence="16" action="shopify_pdf_shop_action_request"/>
-
-        <record id="shopify_pdf_shop_view_limit_log" model="ir.actions.act_window">
-            <field name="name">Shop PDF Log</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">shopify.pdf.view.log</field>
-            <field name="view_mode">tree,form</field>
-        </record>
-
-        <menuitem id="shopify_pdf_shop_view_menu_log" name="Shop View Log" parent="pdf_base_menu" sequence="18" action="shopify_pdf_shop_view_limit_log"/>
-
         <record id="shopify_shop_view__template_default_form" model="ir.ui.view">
-            <field name="name">Shopify Shop Template Default</field>
+            <field name="name">Shopify Template Default</field>
             <field name="model">shopify.pdf.template.default</field>
             <field name="arch" type="xml">
                 <form create='false'>
@@ -222,7 +128,6 @@
                         <group>
                             <group>
                                 <field name="name"/>
-                                <field name="thumbnail"  widget="image"/>
                                 <field name="html"/>
                                 <field name="json"/>
                                 <field name="type"/>
@@ -236,7 +141,7 @@
             </field>
         </record>
         <record id="shopify_pdf_shop_template_default_tree" model="ir.ui.view">
-            <field name="name">Shopify Shop Template Default</field>
+            <field name="name">Shopify Template Default</field>
             <field name="model">shopify.pdf.template.default</field>
             <field name="arch" type="xml">
                 <tree>
@@ -246,14 +151,14 @@
             </field>
         </record>
 
-        <record id="shopify_pdf_shop_template_default" model="ir.actions.act_window">
-            <field name="name">Shopify Shop Template Default</field>
+        <record id="order_printer_template_default_act" model="ir.actions.act_window">
+            <field name="name">Shopify Template Default</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">shopify.pdf.template.default</field>
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem id="shopify_pdf_template_default" name="Template Default" parent="pdf_base_menu" sequence="18" action="shopify_pdf_shop_template_default"/>
+        <menuitem id="order_printer_template_default" name="Template Default" parent="order_printer_menu" sequence="18" action="order_printer_template_default_act"/>
 
     </data>
 </odoo>

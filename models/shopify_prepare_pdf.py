@@ -46,6 +46,8 @@ class Shopify(models.Model):
 
     currency_format = fields.Char('Currency Format')
 
+    
+
     def get_qr_code(self, url=''):
         url = pyqrcode.create(url)
         s = io.BytesIO()
@@ -63,7 +65,7 @@ class Shopify(models.Model):
                 transaction = None
                 if not isDraftOrder:
                     # Khởi tạo lại session cho mỗi đơn hàng
-                    self.start_shopify_session()
+                    self.initialize_shopify_session()
                     
                     # Try to get transaction data with improved error handling
                     try:
@@ -174,7 +176,7 @@ class Shopify(models.Model):
     def prepare_order_data(self, order, shop=None, image_data=None, type=None, template=None, transaction=None):
         data = {'items': {}}
         if not self.currency_format:
-            session = shop.start_shopify_session()
+            session = shop.initialize_shopify_session()
             current_shop = shopify.Shop.current()
             if current_shop:
                 currency_format = current_shop.attributes.get('money_format')
@@ -809,7 +811,7 @@ class Shopify(models.Model):
     def prepare_draft_order_data(self, order, shop=None, image_data=None, type=None, template=None, transaction=None):
         data = {'items': {}}
         if not self.currency_format:
-            session = shop.start_shopify_session()
+            session = shop.initialize_shopify_session()
             current_shop = shopify.Shop.current()
             if current_shop:
                 currency_format = current_shop.attributes.get('money_format')

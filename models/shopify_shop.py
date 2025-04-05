@@ -85,8 +85,6 @@ class ShopifyShop(models.Model):
                                help="PDF templates associated with this shop")
     
     # Feature access controls
-    allow_backend = fields.Boolean(string='Allow Backend Access', default=False,
-                                  help="Whether to allow access to admin backend features")
     allow_frontend = fields.Boolean(string='Allow Frontend Access',
                                    help="Whether to allow frontend customer-facing features")
     is_allow_frontend = fields.Boolean(string='Frontend Status Flag', default=False,
@@ -167,7 +165,7 @@ class ShopifyShop(models.Model):
                 return False
                 
             # Start Shopify session and get shop data
-            self.start_shopify_session()
+            self.initialize_shopify_session()
             shop = shopify.Shop.current()
             
             # Update shop information if not already set
@@ -221,7 +219,7 @@ class ShopifyShop(models.Model):
             bool: True if deletion was successful, False otherwise
         """
         try:
-            self.start_shopify_session()
+            self.initialize_shopify_session()
             hook = shopify.Webhook()
             hook.id = webhook_id
             result = hook.destroy()
@@ -243,7 +241,7 @@ class ShopifyShop(models.Model):
             hook: The created webhook object if successful, None otherwise
         """
         try:
-            self.start_shopify_session()
+            self.initialize_shopify_session()
             
             # Ensure the path has proper URL format
             if 'http' not in path:
@@ -318,16 +316,6 @@ class ShopifyShop(models.Model):
                     'status': t.default
                 })
         return templates
-
-    def get_resource_url(self, type):
-        """Get the URL for resource icons based on template type"""
-        switcher = {
-            'invoice': "/shopify_order_printer/static/description/images/bill.png",
-            'order': "/shopify_order_printer/static/description/images/order.png",
-            'packing': "/shopify_order_printer/static/description/images/box.png",
-            'refund': "/shopify_order_printer/static/description/images/refund.png",
-        }
-        return switcher.get(type, "/")
         
     def get_all_shop_template(self):
         """Get all available templates for the shop with metadata"""
@@ -336,8 +324,7 @@ class ShopifyShop(models.Model):
             if not tem.virtual_rec:
                 templates.append({
                     'id': self.encode(key=tem.id),
-                    'url': '/pdf/templates/' + str(self.encode(tem.id)) + '/edit',
-                    'avatarSource': self.get_resource_url(tem.type),
+                    'url': '/order-printer/templates/' + str(self.encode(tem.id)) + '/edit',
                     'type': tem.type,
                     'title': tem.name,
                     'shortcut': 1,
@@ -396,7 +383,6 @@ class ShopifyShop(models.Model):
             'email': get_value(self.shop_email),
             
             # Feature flags
-            'allow_backend': bool(self.allow_backend),
             'allow_frontend': bool(self.allow_frontend),
             'setup_status': {
                 'is_open_setup_info': bool(self.is_open_setup_info),
@@ -421,139 +407,7 @@ class ShopifyShop(models.Model):
         
         return info
 
-    def schedule_change_script(self):
-        """
-        Schedule script updates for shops that need it
-        Find shops that have frontend enabled but haven't had their scripts updated
-        """
-        shops = self.sudo().search([
-            ('allow_frontend', '=', True),
-            ('token', '!=', False),
-            ('has_change_script', '=', False)
-        ])
-        
-        for shop in shops:
-            shop.force_change_script()
-        
-        return True
-
-    def force_change_script_shop(self, model):
-        """
-        Force script update for all shops in the provided model
-        Args:
-            model: Collection of shop records to update
-        Returns:
-            bool: True if successful
-        """
-        if not model:
-            return False
-            
-        for shop in model:
-            shop.force_change_script()
-            
-        return True
-
-    def force_change_script(self):
-        """
-        Update the Shopify script tags for this shop
-        Removes existing PDF script tags and adds the current one
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if not self.allow_frontend:
-            return False
-            
-        try:
-            # Start Shopify session
-            self.start_shopify_session()
-            
-            # Remove existing PDF script tags
-            existed_script_tags = shopify.ScriptTag.find()
-            for script in existed_script_tags:
-                src = script.attributes.get('src', '')
-                if 'pdf' in src:
-                    shopify.ScriptTag.find(script.id).destroy()
-
-            # Add new script tag
-            script_src = self.env['ir.config_parameter'].sudo().get_param(
-                'shopify_pdf.shopify_script_front')
-                
-            if not script_src:
-                _logger.error(f"Missing configuration: shopify_pdf.shopify_script_front")
-                return False
-                
-            script_tag = shopify.ScriptTag.create({
-                "event": "onload",
-                "display_scope": "all",
-                "src": script_src
-            })
-            
-            # Update shop record
-            self.scrip_tag_id = script_tag.id
-            self.has_change_script = True
-            
-            return True
-            
-        except shopify.ShopifyException as e:
-            _logger.error(f"Shopify API error updating script: {str(e)}")
-            return False
-        except Exception as e:
-            _logger.error(f"Error updating script: {str(e)}")
-            return False
-
-    def script_tag_action(self, action=None):
-        session = self.start_shopify_session()
-        base_url = self.env['ir.config_parameter'].sudo().get_param(
-            'web.base.url')
-        # script_src = self.env['ir.config_parameter'].sudo().get_param(
-        #     'shopify_pdf.shopify_script_front')
-        script_src = base_url + '/shopify_order_printer/static/src/js/pdf-invoice-frontend-button.js'
-
-        existedScriptTags = shopify.ScriptTag.find(src=script_src)
-
-        if action == 'add':
-            try:
-                themes = shopify.Theme.find(limit=200)
-                for them in themes:
-                    if them.attributes.get('role') == 'main':
-                        filters = {
-                            'theme_id': them.attributes.get('id'),
-                            'key': 'templates/customers/order.liquid'
-                        }
-                        asset = shopify.Asset.find(**filters)
-                        if asset and 'order.id | times: 77' not in asset.attributes.get('value'):
-                            html = asset.attributes.get('value')
-                            script = '<script>\n' + 'window.object = "{{ order.id | times: 77}}"\n' + '</script>'
-                            asset.attributes.update({
-                                'value': html + script
-                            })
-                            # asset.attributes.value = html + script
-                            asset.save()
-                        break
-            except Exception as e:
-                _logger.error(traceback.format_exc())
-            if existedScriptTags:
-                if not self.scrip_tag_id:
-                    self.scrip_tag_id = existedScriptTags[0].id
-                if not self.has_change_script:
-                    self.has_change_script = True
-            else:
-                scriptTag = shopify.ScriptTag.create({
-                    "event": "onload",
-                    "display_scope": "all",
-                    "src": script_src
-                })
-                self.scrip_tag_id = scriptTag.id
-                self.has_change_script = True
-        if action == 'remove':
-            if existedScriptTags:
-                shopify.ScriptTag.delete(existedScriptTags[0].id)
-            self.scrip_tag_id = False
-            self.default_template = False
-
-        return True
-
-    def start_shopify_session(self):
+    def initialize_shopify_session(self):
         if not self.shopify_session:
             token = self.token
             self.shopify_session = ShopifyHelper(shop_url=self.name, token=token, env=self.env).auth()
@@ -671,61 +525,6 @@ class ShopifyShop(models.Model):
                     _logger.error(f"Error updating email template ID: {str(e)}")
 
         return True
-
-    def get_limit_request_status(self):
-        """
-        Check if the shop has reached the daily request limit
-        Returns:
-            bool: True if the limit has been reached, False otherwise
-        """
-        # Define request limit constant
-        DAILY_REQUEST_LIMIT = 2
-        
-        try:
-            # Get today's date range (start of day to end of day)
-            today = datetime.now().strftime('%Y-%m-%d')
-            start_of_day = f"{today} 00:00:00"
-            end_of_day = f"{today} 23:59:59"
-            
-            # Count today's requests for this shop
-            request_count = self.env['shopify.pdf.shop.request'].sudo().search_count([
-                ('create_date', '>=', start_of_day),
-                ('create_date', '<=', end_of_day),
-                ('shop_id', '=', self.id)
-            ])
-            
-            # Check if limit reached
-            return request_count >= DAILY_REQUEST_LIMIT
-            
-        except Exception as e:
-            _logger.error(f"Error checking request limit: {str(e)}")
-            # Return False on error to prevent blocking users unnecessarily
-            return False
-
-    def get_view_count(self):
-        """
-        Get total view count for the shop since the beginning of the month
-        or since the shop was created (if more recent)
-        Returns:
-            int: Total view count
-        """
-        try:
-            # Determine start date (first of month or shop creation date, whichever is later)
-            first_of_month = datetime.today().replace(day=1)
-            start_date = max(first_of_month, self.create_date)
-            
-            # Get view records
-            records = self.env['shopify.pdf.view.log'].sudo().search([
-                ('shop_id', '=', self.id),
-                ('create_date', '>=', start_date)
-            ])
-            
-            # Use mapping and sum for more efficient calculation
-            return sum(record.view_count for record in records)
-            
-        except Exception as e:
-            _logger.error(f"Error getting view count: {str(e)}")
-            return 0
 
 
 class ShopPdfTemplate(models.Model):
@@ -859,88 +658,3 @@ class ShopPdfTemplate(models.Model):
         default = dict(default or {})
         default["default"] = False
         return super(ShopPdfTemplate, self).copy(default)
-
-class ShopCustomizationRequest(models.Model):
-    """
-    Stores customization requests from shop owners for PDF templates.
-    
-    This model tracks requests for template customizations, including the
-    shop details, requested customization type, and description. Requests
-    are processed by the marketing team via email notifications.
-    """
-    _name = 'shopify.pdf.shop.request'
-    _description = 'PDF Template Customization Request'
-
-    name = fields.Char(string="Shop URL", required=True, 
-                      help="URL of the Shopify shop making the request")
-    shop_id = fields.Many2one('shopify.pdf.shop', string="Shop Reference", 
-                             help="Reference to the shop record in the system")
-    email = fields.Char(string="Contact Email", 
-                       help="Email address for communication about this request")
-    template_type = fields.Char(string="Template Type", 
-                               help="Type of template customization being requested")
-    description = fields.Char(string="Request Description", 
-                             help="Detailed description of the customization request")
-    status = fields.Char(string="Request Status", default='pending',
-                        help="Current status of the request (pending or done)")
-
-    def schedule_sent_email_for_mkt(self):
-        """
-        Schedule emails for all pending customization requests.
-        
-        This method finds all pending requests and triggers email sending
-        for each one. It's typically called by a scheduled action/cron job.
-        
-        Returns:
-            bool: True if processing completed
-        """
-        pending_requests = self.search([('status', '=', 'pending')])
-        for request in pending_requests:
-            request.send_notification_email()
-        return True
-
-    def send_notification_email(self):
-        """
-        Send customization request notification to the marketing team.
-        
-        Formats the request details and sends them via email to the
-        configured marketing email address.
-        
-        Returns:
-            bool: True if email sent successfully, False on error
-        """
-        try:
-            # Get marketing email from system parameters
-            mkt_email = self.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_mkt_email')
-            
-            # Format email subject and content
-            subject = f"Hapoapps - PDF Invoice Request Customization - {self.name}"
-            content = f"""
-                Shop: {self.name}<br/>
-                Email: {self.email}<br/>
-                Request customize type: {self.template_type}<br/>
-                {self.description}
-            """
-            
-            # Send email via mail client
-            mail_client = self.env['shopify.pdf.mail']
-            mail_client.send(
-                to_email=mkt_email, 
-                subject=subject, 
-                content=content, 
-                reply_to=mkt_email
-            )
-            
-            # Update request status
-            self.status = 'done'
-            return True
-            
-        except Exception as e:
-            _logger.error(f"Failed to send customization request email: {str(e)}")
-            _logger.error(traceback.format_exc())
-            return False
-            
-        except Exception as e:
-            _logger.error(f"Failed to send customization request email: {str(e)}")
-            _logger.error(traceback.format_exc())
-            return False

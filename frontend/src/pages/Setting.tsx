@@ -59,7 +59,7 @@ const SettingsPage: React.FC = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastError, setToastError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Store information state
     const [storeInfo, setStoreInfo] = useState<StoreInformation>({
         storeName: '',
@@ -100,7 +100,7 @@ const SettingsPage: React.FC = () => {
         firstInvoiceNumber: '',
     });
 
-    
+
     // Add state to store config data - using the shared ConfigData type
     const [config, setConfig] = useState<ConfigData | null>(null);
     const [configLoaded, setConfigLoaded] = useState<boolean>(false);
@@ -108,7 +108,7 @@ const SettingsPage: React.FC = () => {
     // Templates for the dropdown
     const templateOptions = React.useMemo(() => {
         if (!config?.templates) return [];
-        
+
         return config.templates.map(template => ({
             label: template.label,
             value: template.value.toString()
@@ -126,7 +126,7 @@ const SettingsPage: React.FC = () => {
             }
             return false;
         };
-        
+
         // Try to get config immediately
         if (!checkForConfig()) {
             // If not available, set up a listener for when the script might load
@@ -135,7 +135,7 @@ const SettingsPage: React.FC = () => {
                     clearInterval(configCheckInterval);
                 }
             }, 100);
-            
+
             // Clean up interval after 5 seconds if config never loads
             setTimeout(() => {
                 clearInterval(configCheckInterval);
@@ -144,7 +144,7 @@ const SettingsPage: React.FC = () => {
                     setConfigLoaded(true); // Mark as loaded anyway to prevent waiting indefinitely
                 }
             }, 5000);
-            
+
             return () => {
                 clearInterval(configCheckInterval);
             };
@@ -155,7 +155,7 @@ const SettingsPage: React.FC = () => {
     useEffect(() => {
         if (config?.info) {
             const info = config.info;
-            
+
             // Update store information
             setStoreInfo({
                 storeName: info.name || '',
@@ -166,7 +166,7 @@ const SettingsPage: React.FC = () => {
                 city: info.city || '',
                 postcode: info.zip || '',
                 vatNumber: info.vat || '',
-                shop: config.shop || '',  
+                shop: config.shop || '',
                 allow_backend: info.allow_backend || false,
                 allow_frontend: info.allow_frontend || false,
                 download_link_text: info.download_link_text || '',
@@ -176,7 +176,7 @@ const SettingsPage: React.FC = () => {
                 front_button_label: info.front_button_label || '',
 
             });
-            
+
             // Update print settings
             setPrintSettings({
                 adminOrderPrintEnabled: info.allow_backend || false,
@@ -184,14 +184,14 @@ const SettingsPage: React.FC = () => {
                 printButtonLabel: info.front_button_label || '',
                 defaultTemplate: info.default_template || '',
             });
-            
+
             // Update notification settings
             setNotificationSettings({
                 defaultEmailTemplate: info.email_notify_template || '',
                 downloadText: info.download_link_text || '',
                 code: '', // This might need to be generated or fetched separately
             });
-            
+
             // Update invoice number settings
             setInvoiceNumberSettings({
                 firstInvoiceNumber: info.invoice_start_number || '',
@@ -268,7 +268,7 @@ const SettingsPage: React.FC = () => {
 
     // Create email link generator function similar to _email_link_download
     const generateEmailLinkCode = useCallback((template: string, text: string) => {
-        return `<a target="_blank" href="{{ shop.url }}/apps/order-printer/pdf/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
+        return `<a target="_blank" href="{{ shop.url }}/apps/order-printer/order-printer/print/${template}/{{ order.id | times: 78 }}/{{ order.order_number | times: 78 }}?shop={{ shop.domain }}">${text}</a>`;
     }, []);
 
     // Add effect to update code field when template or download text changes
@@ -293,7 +293,7 @@ const SettingsPage: React.FC = () => {
     const handleSubmit = useCallback(async () => {
         try {
             setIsLoading(true);
-            
+
             // Prepare data to match API expectations
             const data = {
                 shop: storeInfo.shop,
@@ -306,7 +306,7 @@ const SettingsPage: React.FC = () => {
                 zip: storeInfo.postcode,
                 vat: storeInfo.vatNumber,
                 allow_backend: printSettings.adminOrderPrintEnabled,
-                allow_frontend: printSettings.customerOrderPrintEnabled, 
+                allow_frontend: printSettings.customerOrderPrintEnabled,
                 front_button_label: printSettings.printButtonLabel,
                 default_template: printSettings.defaultTemplate,
                 email_notify_template: notificationSettings.defaultEmailTemplate,
@@ -314,10 +314,10 @@ const SettingsPage: React.FC = () => {
                 invoice_start_number: invoiceNumberSettings.firstInvoiceNumber,
 
             };
-            
+
             // Call the API to save settings
-            const response = await axios.post('/pdf/save/settings', { data });
-            
+            const response = await axios.post('/order-printer/save/settings', { data });
+
             if (response.data) {
                 toggleToast('Settings saved successfully');
             } else {
@@ -333,10 +333,10 @@ const SettingsPage: React.FC = () => {
 
     // Toast component
     const toastMarkup = toastActive ? (
-        <Toast 
-            content={toastMessage} 
-            onDismiss={handleDismissToast} 
-            error={toastError} 
+        <Toast
+            content={toastMessage}
+            onDismiss={handleDismissToast}
+            error={toastError}
             duration={3000}
         />
     ) : null;
@@ -346,13 +346,13 @@ const SettingsPage: React.FC = () => {
     const printButtonRef = useRef<HTMLDivElement>(null);
     const emailNotificationRef = useRef<HTMLDivElement>(null);
     const invoiceNumberRef = useRef<HTMLDivElement>(null);
-    
+
     // Add effect to handle section focus when component mounts - without useLocation
     useEffect(() => {
         // Parse URL params directly
         const urlParams = new URLSearchParams(window.location.search);
         const section = urlParams.get('section');
-        
+
         if (section === 'store-info' && storeInfoRef.current) {
             storeInfoRef.current.scrollIntoView({ behavior: 'smooth' });
         } else if (section === 'print-button' && printButtonRef.current) {
@@ -366,11 +366,11 @@ const SettingsPage: React.FC = () => {
 
     return (
         <Frame>
-            <Page 
-                title="Settings" 
+            <Page
+                title="Settings"
                 primaryAction={
-                    <Button 
-                        variant="primary" 
+                    <Button
+                        variant="primary"
                         onClick={handleSubmit}
                         loading={isLoading}
                     >
@@ -483,97 +483,78 @@ const SettingsPage: React.FC = () => {
                                     </TextContainer>
                                 </div>
                             </Layout.Section>
-                           <Layout.Section>
+                            <Layout.Section>
                                 <Card>
                                     <BlockStack gap="200">
                                         <Text as="p" variant="bodyMd">
-                                            Printing on Shopify admin order page is <Text as="span" fontWeight='bold'>{printSettings.adminOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
+                                            Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
                                         </Text>
                                         <Box>
                                             <Button
-                                                onClick={() => handlePrintSettingChange('adminOrderPrintEnabled')(!printSettings.adminOrderPrintEnabled)}
+                                                onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
                                             >
-                                                {printSettings.adminOrderPrintEnabled ? 'Disable' : 'Enable'}
+                                                {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
                                             </Button>
                                         </Box>
+
+                                        <TextField
+                                            label="Print button label"
+                                            value={printSettings.printButtonLabel}
+                                            onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
+                                            placeholder="Value"
+                                            autoComplete="off"
+                                        />
+                                        <Select
+                                            label="Default print invoice template for customer"
+                                            options={templateOptions}
+                                            value={printSettings.defaultTemplate}
+                                            onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
+                                            placeholder="Select a template"
+                                        />
                                     </BlockStack>
                                 </Card>
                             </Layout.Section>
-                           
-                        </Layout>
-                       <Layout>
-                            <Layout.AnnotatedSection>
-                                <Card>
-                                        <BlockStack gap="200">
-                                            <Text as="p" variant="bodyMd">
-                                                Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
-                                            </Text>
-                                            <Box>
-                                                <Button
-                                                    onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
-                                                >
-                                                    {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
-                                                </Button>
-                                            </Box>
 
-                                            <TextField
-                                                label="Print button label"
-                                                value={printSettings.printButtonLabel}
-                                                onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
-                                                placeholder="Value"
-                                                autoComplete="off"
-                                            />
-                                            <Select
-                                                label="Default print invoice template for customer"
-                                                options={templateOptions}
-                                                value={printSettings.defaultTemplate}
-                                                onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
-                                                placeholder="Select a template"
-                                            />
-                                        </BlockStack>
-                                    </Card>
-                            </Layout.AnnotatedSection>
                         </Layout>
-
                         <Layout>
                             <Layout.AnnotatedSection>
-                            <div ref={emailNotificationRef} id="email-notification-section">
-                                    <Card >
-                                        <Text as = "p" variant = "bodyMd">
-                                            Printting on Customer Order List Page
-                                        </Text>
-                                        <Box paddingBlockStart="300">
-                                            <BlockStack gap="400">
-                                                <Select
-                                                    label="Default print invoice template for customer"
-                                                    options={templateOptions}
-                                                    value={notificationSettings.defaultEmailTemplate}
-                                                    onChange={handleNotificationSettingChange('defaultEmailTemplate')}
-                                                    placeholder="Select a template"
-                                                />
-                                                <TextField
-                                                    label="Download text"
-                                                    value={notificationSettings.downloadText}
-                                                    onChange={handleNotificationSettingChange('downloadText')}
-                                                    placeholder="Value"
-                                                    autoComplete="off"
-                                                />
-                                                <TextField
-                                                    id="setting_variables"
-                                                    label="Copy code"
-                                                    value={notificationSettings.code}
-                                                    onChange={handleNotificationSettingChange('code')}
-                                                    autoComplete="off"
-                                                    readOnly
-                                                    labelAction={{
-                                                        content: 'Copy to clipboard',
-                                                        onAction: copyToClipboard
-                                                    }}
-                                                />
-                                            </BlockStack>
-                                        </Box>
-                                    </Card>
-                                </div>
+                                <div ref={emailNotificationRef} id="email-notification-section">
+                                        <Card >
+                                            <Text as="p" variant="bodyMd">
+                                                Printting on Customer Order List Page
+                                            </Text>
+                                            <Box paddingBlockStart="300">
+                                                <BlockStack gap="400">
+                                                    <Select
+                                                        label="Default print invoice template for customer"
+                                                        options={templateOptions}
+                                                        value={notificationSettings.defaultEmailTemplate}
+                                                        onChange={handleNotificationSettingChange('defaultEmailTemplate')}
+                                                        placeholder="Select a template"
+                                                    />
+                                                    <TextField
+                                                        label="Download text"
+                                                        value={notificationSettings.downloadText}
+                                                        onChange={handleNotificationSettingChange('downloadText')}
+                                                        placeholder="Value"
+                                                        autoComplete="off"
+                                                    />
+                                                    <TextField
+                                                        id="setting_variables"
+                                                        label="Copy code"
+                                                        value={notificationSettings.code}
+                                                        onChange={handleNotificationSettingChange('code')}
+                                                        autoComplete="off"
+                                                        readOnly
+                                                        labelAction={{
+                                                            content: 'Copy to clipboard',
+                                                            onAction: copyToClipboard
+                                                        }}
+                                                    />
+                                                </BlockStack>
+                                            </Box>
+                                        </Card>
+                                    </div>
                             </Layout.AnnotatedSection>
                         </Layout>
 

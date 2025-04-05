@@ -12,11 +12,11 @@ _logger = logging.getLogger(__name__)
 class ShopifyAuth(shopify.Session):
     def __init__(self, shop_url, env, version=None, token=None):
         if version is None:
-            version = env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_version')
+            version = env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_version')
         super(ShopifyAuth, self).__init__(shop_url, version, token)
         shopify.Session.setup(
-            api_key=env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_key'),
-            secret=env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_secret')
+            api_key=env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_key'),
+            secret=env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_secret')
         )
 
 
@@ -41,7 +41,7 @@ class ShopifyHelper:
         return self.shop_model
 
     def auth(self):
-        version = self.env['ir.config_parameter'].sudo().get_param('shopify_pdf.shopify_api_version')
+        version = self.env['ir.config_parameter'].sudo().get_param('shopify_order_printer.shopify_api_version')
         self.session = shopify.Session(version=version, token=self.token, shop_url=self.shop_url)
         shopify.ShopifyResource.activate_session(self.session)
         return self.session

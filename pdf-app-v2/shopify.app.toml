@@ -1,10 +1,10 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "87e74578b5674b3f8a3f100fdc640e93"
-application_url = "https://staging-apps.pullush.com/shopify/pdf"
+client_id = "2cf8e286e3501e03220eebf9563333f9"
+application_url = "https://tax-airline-losing-saddam.trycloudflare.com/shopify/order-printer"
 embedded = true
 name = "Order Printer Demo"
-handle = "order_printer_demo"
+handle = "pdf_test"
 
 [build]
 include_config_on_deploy = true
@@ -13,12 +13,14 @@ include_config_on_deploy = true
 api_version = "2025-01"
 
 [auth]
-redirect_urls = [ "https://staging-apps.pullush.com/shopify/pdf/auth" ]
+redirect_urls = [
+  "https://tax-airline-losing-saddam.trycloudflare.com/shopify/order-printer/auth"
+]
+
+[app_proxy]
+url = "https://tax-airline-losing-saddam.trycloudflare.com"
+subpath = "order-printer"
+prefix = "apps"
 
 [pos]
 embedded = false
-
-[app_proxy]
-url = "https://staging-apps.pullush.com"
-subpath = "order-printer"
-prefix = "apps"

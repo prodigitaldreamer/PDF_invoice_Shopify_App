@@ -9,7 +9,6 @@
             <head>
                 <title>Drag and Drop PDF Invoice</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
                 <!-- Global site tag (gtag.js) - Google Analytics -->
                 <script src="https://www.googletagmanager.com/gtag/js?id=G-C85BNFY4F4"></script>
                 <script>
@@ -21,9 +20,8 @@
                 </script>
                <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style.css"/>
                <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style-custom.css"/>
-                <meta name="shopify-api-key" content="ef9f16539e1c37d5d51e70ed634cfbf7"/>
+               <meta name="shopify-api-key" t-att-content="api_key"/>
                 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-                <!-- <script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="0a35dc9d-32c4-43e8-b3a1-d927b0b87126";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script> -->
             </head>
             <body>
                 <div id="root"></div>
@@ -36,11 +34,10 @@
             </body>
         </template>
 
-        <template id="exception" name="Reset Button">
+        <template id="error" name="Shopify URL Error">
             <head>
                 <t t-call-assets="web.assets_common"/>
-                <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
+                <title>Shopify URL Error</title>
                 <link rel="stylesheet" href="/web/static/lib/bootstrap/dist/css/bootstrap.css"/>
             </head>
             <body>
@@ -50,22 +47,17 @@
                     </div>
                     <div class="card-body">
                         <span class="message">Error. Please refresh your browser! If the problem persists, please
-                            contact
-                            the administrator or hit the Reset button to start over.
+                            contact the administrator
                         </span>
-                        <form id="disconnect" t-attf-action="#{reset_action}" method="POST">
-                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/><br/>
-                            <button class="btn btn-secondary" type="submit" value="Submit">Reset</button>
-                        </form>
+
                     </div>
                 </div>
             </body>
         </template>
-        <template id="404_not_found" name="Not Found">
+        <template id="404_not_found" name="Shopify PDF Not Found">
             <head>
                 <t t-call-assets="web.assets_common"/>
-                <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
+                <title>Shopify PDF Not Found</title>
             </head>
             <body>
                 <div class="card mx-auto mt-5 border-0" style="max-width: 900px">
@@ -81,10 +73,9 @@
             </body>
         </template>
 
-        <template id="preview" name="Shopify PDF Preview">
+        <template id="pdf_preview" name="Shopify PDF Preview">
             <head>
-                <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
+                <title>Shopify PDF Previews</title>
                 <link rel="stylesheet" href="/shopify_order_printer/static/css/polaris-style.css"/>
                 <meta name="shopify-api-key" content="ef9f16539e1c37d5d51e70ed634cfbf7"/>
                 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
@@ -114,7 +105,6 @@
             <head>
                 <t t-call-assets="web.assets_common"/>
                 <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
             </head>
             <body>
                 <div class="container-fluid">
@@ -122,60 +112,6 @@
                         <div class="col-md-12">
                             <div class="card border-0">
                                 <div style="margin: 50 auto; text-align:center;">
-                                    <div class="ns-image-empty" style="margin: 40 auto;">
-                                        <svg width="160" height="160" viewBox="0 0 160 160" fill="none"
-                                             xmlns="http://www.w3.org/2000/svg">
-                                            <g style="mix-blend-mode:luminosity" clip-path="url(#clip0_3810_13994)">
-                                                <g clip-path="url(#clip1_3810_13994)">
-                                                    <path d="M96.271 20.3389L125.312 35.2845L154.474 50.1086L125.312 65.0542L96.271 79.9999L67.2303 65.0542L38.0681 50.1086L67.2303 35.2845L96.271 20.3389Z"
-                                                          fill="#D9AC80"/>
-                                                    <path d="M132.602 74.8967V61.4092L118.021 68.8212V82.3088L126.041 72.4665L132.602 74.8967Z"
-                                                          fill="#D7BAA4"/>
-                                                    <path d="M96.271 79.9997V139.661L154.474 109.891V50.1084L132.602 61.4088L132.116 61.6518V74.7748L126.041 72.4661L118.021 82.3083V68.8208L96.271 79.9997Z"
-                                                          fill="#A67E4F"/>
-                                                    <path d="M96.271 139.661V79.9997L67.2303 65.054L38.0681 50.1084V109.891L96.271 139.661Z"
-                                                          fill="#926E43"/>
-                                                    <path d="M59.9397 38.9296L118.021 68.8209L132.116 61.6519L132.602 61.4088L74.5208 31.5176L67.2302 35.2844L59.9397 38.9296Z"
-                                                          fill="#F2D3BA"/>
-                                                </g>
-                                                <path d="M35.7729 73.61C34.7069 72.7191 33.7335 71.7585 32.8482 70.7432L23.0132 82.5107L29.2788 87.7472L39.1176 75.9753C37.9482 75.2775 36.8272 74.491 35.7729 73.61V73.61Z"
-                                                      fill="#83C4E8"/>
-                                                <path d="M0.697584 109.009L7.16196 114.412C7.98571 115.101 9.21196 114.991 9.9004 114.167L29.8235 90.329C30.512 89.5052 30.4023 88.279 29.5785 87.5905L23.1141 82.1877C22.2904 81.4993 21.0641 81.609 20.3757 82.4327L0.452584 106.271C-0.236166 107.095 -0.126479 108.321 0.697584 109.009Z"
-                                                      fill="#478CB1"/>
-                                                <path d="M21.5023 89.7415C22.1907 88.9177 23.417 88.808 24.2407 89.4965L27.9373 92.5858L29.8235 90.329C30.512 89.5049 30.4023 88.279 29.5785 87.5902L23.1142 82.1877C22.2904 81.4993 21.0642 81.609 20.3757 82.4327L0.452597 106.271C-0.235841 107.095 -0.126153 108.321 0.697597 109.009L3.46541 111.323L21.5023 89.7415Z"
-                                                      fill="#266C8F"/>
-                                                <path d="M52.4043 79.9576C66.9001 79.9576 78.6512 68.2065 78.6512 53.7107C78.6512 39.215 66.9001 27.4639 52.4043 27.4639C37.9086 27.4639 26.1575 39.215 26.1575 53.7107C26.1575 68.2065 37.9086 79.9576 52.4043 79.9576Z"
-                                                      fill="#0593FC"/>
-                                                <path d="M52.4043 71.3272C62.1335 71.3272 70.0206 63.4402 70.0206 53.711C70.0206 43.9818 62.1335 36.0947 52.4043 36.0947C42.6751 36.0947 34.7881 43.9818 34.7881 53.711C34.7881 63.4402 42.6751 71.3272 52.4043 71.3272Z"
-                                                      fill="#EAF6FF"/>
-                                                <path d="M51.2291 67.2278C43.7638 60.9887 42.7701 49.8791 49.0091 42.4138C51.3097 39.6609 54.2738 37.7912 57.4722 36.8366C50.9254 34.8737 43.5479 36.8375 38.8872 42.4138C32.6482 49.8791 33.6419 60.9887 41.1072 67.2278C45.8197 71.1662 51.9832 72.2194 57.4582 70.5853C55.2407 69.9203 53.1182 68.8066 51.2291 67.2278Z"
-                                                      fill="#D8ECFE"/>
-                                                <path d="M52.3896 73.6715C42.1793 73.6721 33.4505 65.8499 32.5236 55.4893C32.0483 50.179 33.6699 45.0015 37.0889 40.9106C40.508 36.8196 45.3155 34.3049 50.6255 33.8299C55.9368 33.3559 61.1136 34.9759 65.2043 38.3949C69.2952 41.814 71.8099 46.6215 72.2849 51.9318C72.7602 57.2421 71.1386 62.4196 67.7196 66.5106C64.3005 70.6015 59.493 73.1159 54.183 73.5912C53.5814 73.6449 52.9824 73.6715 52.3896 73.6715V73.6715ZM52.4311 38.4368C51.9705 38.4368 51.5077 38.4574 51.0436 38.499C46.9805 38.8624 43.3021 40.7865 40.6858 43.9165C38.0696 47.0465 36.8293 51.0084 37.1927 55.0715C37.943 63.4593 45.3814 69.6734 53.7652 68.9224C57.8283 68.559 61.5068 66.6349 64.123 63.5046C66.7389 60.3743 67.9796 56.4131 67.6161 52.3499C67.2527 48.2868 65.3286 44.6084 62.1986 41.9921C59.4261 39.6746 56.0011 38.4368 52.4311 38.4368V38.4368Z"
-                                                      fill="#0172FB"/>
-                                                <path d="M126.1 139.865H158.364C159.268 139.865 160 139.132 160 138.229V89.6408C160 88.7374 159.268 88.0049 158.364 88.0049H126.1C125.196 88.0049 124.464 88.7374 124.464 89.6408V138.229C124.464 139.132 125.196 139.865 126.1 139.865Z"
-                                                      fill="#FED402"/>
-                                                <path d="M134.605 138.229V89.6408C134.605 88.7374 135.337 88.0049 136.241 88.0049H126.1C125.196 88.0049 124.464 88.7374 124.464 89.6408V138.229C124.464 139.132 125.196 139.865 126.1 139.865H136.241C135.337 139.865 134.605 139.132 134.605 138.229Z"
-                                                      fill="#FAC600"/>
-                                                <path d="M149.849 102.04H134.615C133.32 102.04 132.271 100.991 132.271 99.6963C132.271 98.4019 133.32 97.3525 134.615 97.3525H149.849C151.143 97.3525 152.193 98.4019 152.193 99.6963C152.193 100.991 151.143 102.04 149.849 102.04Z"
-                                                      fill="#FE9901"/>
-                                                <path d="M149.849 111.134H134.615C133.32 111.134 132.271 110.084 132.271 108.79C132.271 107.496 133.32 106.446 134.615 106.446H149.849C151.143 106.446 152.193 107.496 152.193 108.79C152.193 110.084 151.143 111.134 149.849 111.134Z"
-                                                      fill="#FE9901"/>
-                                                <path d="M149.849 120.227H134.615C133.32 120.227 132.271 119.177 132.271 117.883C132.271 116.588 133.32 115.539 134.615 115.539H149.849C151.143 115.539 152.193 116.588 152.193 117.883C152.193 119.177 151.143 120.227 149.849 120.227Z"
-                                                      fill="#FE9901"/>
-                                                <path d="M143.826 129.32H134.615C133.32 129.32 132.271 128.271 132.271 126.977C132.271 125.682 133.32 124.633 134.615 124.633H143.826C145.121 124.633 146.17 125.682 146.17 126.977C146.17 128.271 145.121 129.32 143.826 129.32Z"
-                                                      fill="#FE9901"/>
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_3810_13994">
-                                                    <rect width="160" height="160" fill="white"/>
-                                                </clipPath>
-                                                <clipPath id="clip1_3810_13994">
-                                                    <rect width="119.322" height="119.322" fill="white"
-                                                          transform="translate(36.6101 20.3389)"/>
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </div>
                                     <div class="ns-title-empty" style="margin: 20;">
                                         <span style="font-family: sans-serif;">Preview not available</span>
                                     </div>
@@ -190,78 +126,10 @@
             </body>
         </template>
 
-        <template id="empty_state_limit_bulk" name="Shopify PDF Empty">
+        <template id="empty_order" name="Shopify Order Empty">
             <head>
                 <t t-call-assets="web.assets_common"/>
-                <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
-            </head>
-            <body>
-                <div class="container-fluid">
-                    <div class="row content">
-                        <div class="col-md-12">
-                            <div class="card border-0">
-                                <!--                                <img class="card-img" src="https://cdn.shopify.com/s/files/1/0757/9955/files/empty-state.svg" alt="Card image cap" style="max-height: 730px"/>-->
-                                <div class="card-img-overlay" style="padding: 260px 220px 75px 100px;">
-                                    <h5 class="card-title">Drag and Drop PDF Invoice by Hapo</h5>
-                                    <p class="card-text text-muted">
-                                        You can only print/preview in bulk
-                                        <t t-esc="bulk_limit"/>
-                                        orders each time with
-                                        <t t-esc="plan_name"/>
-                                        plan. <a href="/pdf/accounts" target="_blank">Upgrade Now</a> to print/preview
-                                        more!
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </body>
-        </template>
-
-        <template id="empty_state_limit_pdf_view" name="Shopify PDF Empty">
-            <head>
-                <t t-call-assets="web.assets_common"/>
-                <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
-            </head>
-            <body>
-                <div class="container-fluid">
-                    <div class="row content">
-                        <div class="col-md-12">
-                            <div class="card border-0">
-                                <!--                                <img class="card-img" src="https://cdn.shopify.com/s/files/1/0757/9955/files/empty-state.svg" alt="Card image cap" style="max-height: 730px"/>-->
-                                <div class="card-img-overlay" style="padding: 260px 220px 75px 100px;">
-                                    <h5 class="card-title">Drag and Drop PDF Invoice by Hapo</h5>
-                                    <t t-if="type == 'limit_view_draft_order'">
-                                        <p class="card-text text-muted">
-                                            Draft orders can only be printed and exported with paid plans. <a
-                                                href="/pdf/accounts" target="_blank">Upgrade Now
-                                        </a> to print and export draft orders! After that, go back to this page and
-                                            reload to continue print/export.Thanks you!"
-                                        </p>
-                                    </t>
-                                    <t t-if="type == 'limit_pdf_view_order'">
-                                        <p class="card-text text-muted">
-                                            You only have 50 views to print and export with Free plan. <a
-                                                href="/pdf/accounts" target="_blank">Upgrade Now
-                                        </a> to print and export unlimited orders!
-                                        </p>
-                                    </t>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </body>
-        </template>
-
-        <template id="turn_off" name="Shopify PDF Turn Off">
-            <head>
-                <t t-call-assets="web.assets_common"/>
-                <title>Drag and Drop PDF Invoice</title>
-                <link rel="shortcut icon" sizes="196x196" href="/shopify_order_printer/static/description/Logo.png"/>
+                <title>Shopify Order Empty</title>
             </head>
             <body>
                 <div class="container-fluid">
@@ -269,55 +137,10 @@
                         <div class="col-md-2">
                         </div>
                         <div class="col-md-8">
-                            <div class="card border-0; margin: 10% 0; box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.15); border-radius: 8px; ">
-                                <div style="margin: 50 auto; text-align:center;">
-                                    <div class="ns-image-empty" style="margin: 40 auto;">
-                                        <svg width="146" height="124" viewBox="0 0 146 124" fill="none"
-                                             xmlns="http://www.w3.org/2000/svg">
-                                            <g style="mix-blend-mode:luminosity">
-                                                <g clip-path="url(#clip0_3811_13915)">
-                                                    <path d="M97.6159 122.559H143.189C144.465 122.559 145.5 121.524 145.5 120.248V51.6174C145.5 50.3413 144.465 49.3066 143.189 49.3066H97.6159C96.3398 49.3066 95.3052 50.3413 95.3052 51.6174V120.248C95.3052 121.524 96.3398 122.559 97.6159 122.559Z"
-                                                          fill="#FED402"/>
-                                                    <path d="M109.629 120.248V51.6174C109.629 50.3413 110.664 49.3066 111.94 49.3066H97.6159C96.3398 49.3066 95.3052 50.3413 95.3052 51.6174V120.248C95.3052 121.524 96.3398 122.558 97.6159 122.558H111.94C110.664 122.559 109.629 121.524 109.629 120.248Z"
-                                                          fill="#FAC600"/>
-                                                    <path d="M131.162 69.1318H109.644C107.815 69.1318 106.333 67.6496 106.333 65.8213C106.333 63.993 107.815 62.5107 109.644 62.5107H131.162C132.99 62.5107 134.473 63.993 134.473 65.8213C134.473 67.6496 132.99 69.1318 131.162 69.1318Z"
-                                                          fill="#FE9901"/>
-                                                    <path d="M131.162 81.9766H109.644C107.815 81.9766 106.333 80.4943 106.333 78.666C106.333 76.8377 107.815 75.3555 109.644 75.3555H131.162C132.99 75.3555 134.473 76.8377 134.473 78.666C134.473 80.4943 132.99 81.9766 131.162 81.9766Z"
-                                                          fill="#FE9901"/>
-                                                    <path d="M131.162 94.8203H109.644C107.815 94.8203 106.333 93.3381 106.333 91.5098C106.333 89.6815 107.815 88.1992 109.644 88.1992H131.162C132.99 88.1992 134.473 89.6815 134.473 91.5098C134.473 93.3381 132.99 94.8203 131.162 94.8203Z"
-                                                          fill="#FE9901"/>
-                                                    <path d="M122.655 107.665H109.644C107.815 107.665 106.333 106.183 106.333 104.354C106.333 102.526 107.815 101.044 109.644 101.044H122.655C124.483 101.044 125.965 102.526 125.965 104.354C125.965 106.183 124.483 107.665 122.655 107.665Z"
-                                                          fill="#FE9901"/>
-                                                    <path d="M51.0294 65.1813C49.5238 63.9228 48.1488 62.566 46.8983 61.1318L33.0063 77.7534L41.8565 85.1501L55.7538 68.5223C54.102 67.5366 52.5187 66.4256 51.0294 65.1813Z"
-                                                          fill="#83C4E8"/>
-                                                    <path d="M1.48534 115.183L10.6163 122.814C11.7798 123.786 13.5119 123.632 14.4843 122.468L42.6257 88.7967C43.5981 87.6331 43.4432 85.901 42.2797 84.9286L33.1487 77.2972C31.9852 76.3247 30.2531 76.4797 29.2807 77.6432L1.13927 111.315C0.166416 112.478 0.321349 114.21 1.48534 115.183Z"
-                                                          fill="#478CB1"/>
-                                                    <path d="M30.8721 87.9668C31.8445 86.8033 33.5766 86.6483 34.7402 87.6208L39.9616 91.9845L42.6259 88.7967C43.5983 87.6327 43.4434 85.901 42.2798 84.9282L33.1489 77.2972C31.9853 76.3247 30.2533 76.4797 29.2808 77.6432L1.13944 111.315C0.167019 112.478 0.321952 114.21 1.4855 115.183L5.39503 118.45L30.8721 87.9668Z"
-                                                          fill="#266C8F"/>
-                                                    <path d="M74.5215 74.1474C94.9967 74.1474 111.595 57.5489 111.595 37.0737C111.595 16.5985 94.9967 0 74.5215 0C54.0462 0 37.4478 16.5985 37.4478 37.0737C37.4478 57.5489 54.0462 74.1474 74.5215 74.1474Z"
-                                                          fill="#0593FC"/>
-                                                    <path d="M74.5211 61.9563C88.2636 61.9563 99.4041 50.8159 99.4041 37.0734C99.4041 23.3309 88.2636 12.1904 74.5211 12.1904C60.7787 12.1904 49.6382 23.3309 49.6382 37.0734C49.6382 50.8159 60.7787 61.9563 74.5211 61.9563Z"
-                                                          fill="#EAF6FF"/>
-                                                    <path d="M72.8613 56.1665C62.3166 47.3538 60.9129 31.6614 69.7256 21.1166C72.9752 17.2283 77.162 14.5873 81.6797 13.2388C72.4323 10.4664 62.0116 13.2402 55.4284 21.1166C46.6158 31.6614 48.0194 47.3538 58.5642 56.1665C65.2206 61.7295 73.9264 63.2171 81.6599 60.909C78.5277 59.9696 75.5296 58.3965 72.8613 56.1665Z"
-                                                          fill="#D8ECFE"/>
-                                                    <path d="M74.5001 65.2684C60.078 65.2693 47.7487 54.2205 46.4395 39.5861C45.7681 32.0853 48.0585 24.7721 52.888 18.9936C57.7174 13.2152 64.508 9.66317 72.0084 8.99223C79.5105 8.32262 86.8228 10.6109 92.6009 15.4403C98.3793 20.2697 101.931 27.0603 102.602 34.5611C103.274 42.062 100.983 49.3752 96.1537 55.1536C91.3243 60.9321 84.5337 64.4836 77.0333 65.155C76.1836 65.2309 75.3375 65.2684 74.5001 65.2684ZM74.5588 15.4994C73.9082 15.4994 73.2545 15.5286 72.599 15.5873C66.8598 16.1006 61.664 18.8184 57.9686 23.2395C54.2731 27.6606 52.5212 33.2568 53.0345 38.9959C54.0943 50.8437 64.6011 59.6211 76.4432 58.5604C82.1823 58.047 87.3781 55.3293 91.0736 50.9077C94.7686 46.4862 96.521 40.8909 96.0076 35.1517C95.4943 29.4126 92.7765 24.2168 88.3554 20.5213C84.4393 17.2479 79.6014 15.4994 74.5588 15.4994Z"
-                                                          fill="#0172FB"/>
-                                                </g>
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_3811_13915">
-                                                    <rect x="0.5" width="145" height="123.453" fill="white"/>
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </div>
-                                    <div class="ns-title-empty" style="margin: 20;">
-                                        <span>Printing is currently disabled</span>
-                                    </div>
-                                    <div class="ns-subtext-empty"
-                                         style="margin-bottom: 20; font-weight: 400; font-size: 14px; color: #6D7175;">
-                                        <span>Please enable this feature in tên <app></app> settings
-                                        </span>
+                            <div class="card border-0" style="margin: 10% 0; box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.15); border-radius: 8px;">
+                                <div style="margin: 50px auto; text-align:center;">
+                                    <div class="ns-image-empty" style="margin: 40px auto;">
+                                        <img src="/shopify_order_printer/static/img/order.png" alt="Empty Order" style="max-width: 100%; height: auto;"/>
                                     </div>
                                 </div>
                             </div>

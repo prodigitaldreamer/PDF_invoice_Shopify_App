@@ -406,7 +406,7 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
         const apiType = templateId ? 'edit' : '';
         
         // Use the appropriate API endpoint
-        axios.post(`/pdf/template/update/${apiType}`, {
+        axios.post(`/order-printer/template/update/${apiType}`, {
           data: {
             info: templateData,
             shop: window.config?.info?.shop,
@@ -427,7 +427,7 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
               
               // Redirect if this was a new template
               if (!templateId && res.data.result.record) {
-                window.location.pathname = `/pdf/templates/${res.data.result.record}/design`;
+                window.location.pathname = `/order-printer/templates/${res.data.result.record}/design`;
               }
             } else {
               setToastError(true);

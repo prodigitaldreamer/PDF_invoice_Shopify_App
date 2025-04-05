@@ -64,7 +64,7 @@ const App: React.FC = () => {
         setIsEditorOpen(false);
         
         // Clear template data when navigating away
-        if (newPath !== '/pdf/templates/edit') {
+        if (newPath !== '/order-printer/templates/edit') {
             setTemplateHtml(null);
             setTemplateJson(null);
             setTemplateInfo(null);
@@ -94,18 +94,18 @@ const App: React.FC = () => {
     };
 
     const renderComponent = () => {
-        if (path === '/pdf/settings') {
+        if (path === '/order-printer/settings') {
             return <SettingsPage />;
         }
-        if (path === '/pdf/templates') {
+        if (path === '/order-printer/templates') {
             return <TemplateManagementPage onEditTemplate={(id) => {
-                handleNavigation('/pdf/templates/edit', { id });
+                handleNavigation('/order-printer/templates/edit', { id });
             }} />;
         }
-        if (path === '/pdf/email_notification') {
+        if (path === '/order-printer/email_notification') {
             return <EmailNotification />;
         }
-        if (path === '/pdf/templates/edit' && templateId) {
+        if (path === '/order-printer/templates/edit' && templateId) {
             // If editor is open, render the TemplateEdit component instead of TemplateView
             if (isEditorOpen) {
                 return <TemplateEdit 
@@ -132,9 +132,9 @@ const App: React.FC = () => {
         <AppProvider i18n={{}}>
             <NavMenu>
                 <Link url="/" onClick={() => handleNavigation('/')}>Home</Link>
-                <Link url="/pdf/templates" onClick={() => handleNavigation('/pdf/templates')}>Template Management</Link>
-                <Link url="/pdf/email_notification" onClick={() => handleNavigation('/pdf/email_notification')}>Email Notification</Link>
-                <Link url="/pdf/settings" onClick={() => handleNavigation('/pdf/settings')}>Setting</Link>
+                <Link url="/order-printer/templates" onClick={() => handleNavigation('/order-printer/templates')}>Template Management</Link>
+                <Link url="/order-printer/email_notification" onClick={() => handleNavigation('/order-printer/email_notification')}>Email Notification</Link>
+                <Link url="/order-printer/settings" onClick={() => handleNavigation('/order-printer/settings')}>Setting</Link>
             </NavMenu>
             {renderComponent()}
         </AppProvider>

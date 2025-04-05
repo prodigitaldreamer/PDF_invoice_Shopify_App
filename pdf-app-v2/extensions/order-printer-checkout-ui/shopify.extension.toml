@@ -6,8 +6,8 @@
 api_version = "2025-01"
 
 [[extensions]]
-name = "checkout-ui-pdf"
-handle = "checkout-ui-pdf"
+name = "order-printer-checkout-ui"
+handle = "order-printer-checkout-ui"
 type = "ui_extension"
 
 
@@ -16,7 +16,7 @@ type = "ui_extension"
 # https://shopify.dev/docs/api/checkout-ui-extensions/unstable/extension-targets-overview
 
 [[extensions.targeting]]
-module = "./src/Checkout.tsx"
+module = "./src/Checkout.jsx"
 target = "purchase.thank-you.customer-information.render-after"
 
 [extensions.capabilities]
