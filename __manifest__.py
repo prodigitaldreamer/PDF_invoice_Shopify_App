@@ -23,7 +23,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/res_config_setting.xml',
-        'views/order_printer_templates.xml',
+        'views/order_printer_template.xml',
         'views/shopify_shop.xml',
         'views/shop_log.xml',   
     ],

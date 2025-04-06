@@ -42,6 +42,6 @@
                 </search>
             </field>
         </record>
-        <menuitem id="shopify_pdf_shop_log" name="Shop Log" parent="shopify_order_printer.pdf_base_menu" sequence="2" action="shopify_pdf_shop_log_action"/>
+        <menuitem id="shopify_pdf_shop_log" name="Shop Log" parent="shopify_order_printer.order_printer_menu" sequence="2" action="shopify_pdf_shop_log_action"/>
     </data>
 </odoo>
