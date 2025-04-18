@@ -9,10 +9,9 @@ import {
   BlockStack,
   Box,
   Layout,
-  Checkbox,
+  Checkbox,Frame
 } from '@shopify/polaris';
 import { ConfigData, Task } from '../types';
-import { AppProvider } from '@shopify/polaris';
 
 const Home: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([
@@ -71,7 +70,7 @@ const Home: React.FC = () => {
     // Function to check if config is available
     const checkForConfig = () => {
       if (window.config) {
-        console.log("window.config loaded", window.config );
+        // console.log("window.config loaded", window.config );
         setConfig(window.config);
         setConfigLoaded(true);
         return true;
@@ -217,7 +216,7 @@ const Home: React.FC = () => {
 
 
   return (
-    <AppProvider i18n={{}}>
+      <Frame>
        <Page title={`Welcome ${shopName}`}>
             <Layout>
               <Layout.Section>
@@ -229,7 +228,7 @@ const Home: React.FC = () => {
                     Use this personalized guide to setup your invoices
                   </Text>
                 </BlockStack>
-      
+
                 <Box>
                   <div style={{ width: '50%' }}>
                     <InlineStack wrap={false} blockAlign='center' gap="400">
@@ -247,7 +246,7 @@ const Home: React.FC = () => {
                       padding="400"
                     >
                       <InlineStack gap="400" blockAlign="start" wrap={false}>
-                        <div 
+                        <div
                           style={{ display: 'flex', alignItems: 'center' }}
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -291,8 +290,8 @@ const Home: React.FC = () => {
             </Layout.Section>
             </Layout>
           </Page>
-    </AppProvider>
 
+      </Frame>
   );
 };
 export default Home;

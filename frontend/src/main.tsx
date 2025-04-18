@@ -6,12 +6,22 @@ import { getSessionToken } from '@shopify/app-bridge/utilities'
 import App from './App.tsx'
 import './index.css'
 import './components/PDFPreview/index.tsx'
+const getHost = () => {
+  const urlHost = new URLSearchParams(window.location.search).get('host');
+  if (urlHost) {
+    sessionStorage.setItem('shopify-host', urlHost);
+    return urlHost;
+  }
+  return sessionStorage.getItem('shopify-host');
+};
 const app = createApp({
   apiKey: document.querySelector('meta[name="shopify-api-key"]')?.getAttribute('content') || '',
-  host: new URLSearchParams(location.search).get('host') || '',
+  host: getHost() || '',
   forceRedirect: true
 });
-
+if (!getHost()) {
+  throw new Error('Missing host param for App Bridge');
+}
 getSessionToken(app)
   .then(token => {
     // Add token to fetch requests

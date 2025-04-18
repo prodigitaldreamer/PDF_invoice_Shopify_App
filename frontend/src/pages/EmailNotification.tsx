@@ -77,7 +77,7 @@ const EmailNotification: React.FC = () => {
         front_button_label: '',
         shop_url: '',
     });
-    console.log(storeInfo);
+    // console.log(storeInfo);
     // Print settings state
     const [printSettings, setPrintSettings] = useState<PrintSettings>({
         adminOrderPrintEnabled: false,

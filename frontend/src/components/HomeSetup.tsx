@@ -70,7 +70,7 @@ export const HomeSetup: React.FC = () => {
     // Function to check if config is available
     const checkForConfig = () => {
       if (window.config) {
-        console.log("window.config loaded", window.config );
+        // console.log("window.config loaded", window.config );
         setConfig(window.config);
         setConfigLoaded(true);
         return true;

@@ -112,6 +112,9 @@ class ShopifyConnector(http.Controller):
             if 'shop' not in request.params:
                 raise Exception('Missing shop url parameter')
             shop = request.params['shop']
+            # Set shop URL in session before using it
+            request.session['shop_url_pdf'] = shop
+            
             session = ShopifyAuth(shop, env=request.env)
             scope = [
                 "read_products",
@@ -135,14 +138,11 @@ class ShopifyConnector(http.Controller):
             permission_url = session.create_permission_url(
                 scope, call_back
             )
-            # return werkzeug.utils.redirect(permission_url)
-            print("perm",permission_url)
-            headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-                'shop_url_pdf'] + " https://admin.shopify.com;"}
+            
+            headers = {'Content-Security-Policy': "frame-ancestors https://" + shop + " https://admin.shopify.com;"}
             return request.render('shopify_order_printer.redirect', {
                 'url': permission_url
             }, headers=headers)
-            # return request.redirect(permission_url)
         except Exception as e:
             # _logger.error(str(e))
             # print(str(e))

@@ -257,13 +257,13 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
     if (!window.unlayer) return;
 
     try {
-      console.log("Loading template content");
+      // console.log("Loading template content");
       
       if (templateJson && templateJson.trim() !== '') {
         // First try to use the provided JSON design directly
         try {
           const design = JSON.parse(templateJson);
-          console.log("Successfully loaded template from JSON design");
+          // console.log("Successfully loaded template from JSON design");
           window.unlayer.loadDesign(design);
           return;
         } catch (e) {
@@ -273,7 +273,7 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
       
       if (templateHtml && templateHtml.trim() !== '') {
         // Fall back to HTML if JSON parsing fails or is not available
-        console.log("Loading template content, HTML length:", templateHtml?.length);
+        // console.log("Loading template content, HTML length:", templateHtml?.length);
       
         if (templateHtml && templateHtml.trim() !== '') {
           // Check if content is likely HTML (starts with HTML tags)
@@ -283,7 +283,7 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
             try {
               // Try parsing as JSON only if it doesn't look like HTML
               const design = JSON.parse(templateHtml);
-              console.log("Successfully parsed template as JSON design");
+              // console.log("Successfully parsed template as JSON design");
               window.unlayer.loadDesign(design);
               return;
             } catch (e) {
@@ -292,7 +292,7 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
           }
           
           // Handle as HTML content - use HTML block instead of raw HTML content
-          console.log("Creating HTML design structure");
+          // console.log("Creating HTML design structure");
           
           // Create a cleaner design structure with the HTML content
           const htmlDesign = {
@@ -356,11 +356,11 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
             schemaVersion: 8
           };
           
-          console.log("Loading HTML design structure");
+          // console.log("Loading HTML design structure");
           window.unlayer.loadDesign(htmlDesign);
         } else {
           // Load a default template structure
-          console.log("No template content, loading default design");
+          // console.log("No template content, loading default design");
           window.unlayer.loadDesign(initialDesign.current);
         }
       } else {

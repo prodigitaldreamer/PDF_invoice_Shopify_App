@@ -102,7 +102,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
         }
       });
       
-      console.log('Template API response:', response);
+      // console.log('Template API response:', response);
       
       if (response.data.result.status && response.data.result.template_info) {
         const templateInfo = response.data.result.template_info;

@@ -84,7 +84,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
   // Fetch templates from config
   useEffect(() => {
     const configData = window.config;
-    console.log('Config data:', configData);
+    // console.log('Config data:', configData);
     if (configData) {
       setConfig(configData);
       setTemplates(configData.all_templates || []);
@@ -445,7 +445,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
       
       // Call the new API endpoint
       const response = await axios.post('/order-printer/set_default_templates', { data });
-      console.log('Response:', response);
+      // console.log('Response:', response);
       
       if (response.data.result.status) {
         // Update the UI - set this template as default and others of same type as non-default
