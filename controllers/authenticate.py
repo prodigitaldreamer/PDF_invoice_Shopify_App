@@ -98,11 +98,20 @@ class ShopifyConnector(http.Controller):
     def index(self):
         @shop_login_required
         def registry():
-            redirect_url = '/order-printer/dashboard?shop=' + request.session['shop_url_pdf']
-            if request.httprequest.referrer == 'https://partners.shopify.com/' and 'shop_url_pdf' in request.session:
+            shop = request.session.get('shop_url_pdf')
+            if not shop:
+                return redirect('/shopify/order-printer/login')
+                
+            # Create properly encoded host for App Bridge
+            shop_name = shop.split('.myshopify.com')[0]
+            encoded_host = base64.b64encode(f"admin.shopify.com/store/{shop_name}".encode()).decode()
+            
+            redirect_url = f'/order-printer/dashboard?shop={shop}&host={encoded_host}'
+            
+            if request.httprequest.referrer == 'https://partners.shopify.com/':
                 return self.redirect_app_page()
-            else:
-                return redirect(request.env['ir.config_parameter'].sudo().get_param('web.base.url') + redirect_url)
+            
+            return redirect(request.env['ir.config_parameter'].sudo().get_param('web.base.url') + redirect_url)
 
         return registry()
 
@@ -138,7 +147,7 @@ class ShopifyConnector(http.Controller):
             permission_url = session.create_permission_url(
                 scope, call_back
             )
-            
+
             headers = {'Content-Security-Policy': "frame-ancestors https://" + shop + " https://admin.shopify.com;"}
             return request.render('shopify_order_printer.redirect', {
                 'url': permission_url
