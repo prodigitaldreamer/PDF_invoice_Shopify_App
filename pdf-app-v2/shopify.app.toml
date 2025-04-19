@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "b532f4655dbba6b411aa1b704520ed69"
-application_url = "https://hierarchy-industrial-brave-existed.trycloudflare.com/shopify/order-printer"
+application_url = "https://ff-maui-dirt-operations.trycloudflare.com/shopify/order-printer"
 embedded = true
 name = "Order Printer Demo"
 handle = "pdf_demo"
@@ -14,11 +14,11 @@ api_version = "2025-01"
 
 [auth]
 redirect_urls = [
-  "https://hierarchy-industrial-brave-existed.trycloudflare.com/shopify/order-printer/auth"
+  "https://ff-maui-dirt-operations.trycloudflare.com/shopify/order-printer/auth"
 ]
 
 [app_proxy]
-url = "https://hierarchy-industrial-brave-existed.trycloudflare.com"
+url = "https://ff-maui-dirt-operations.trycloudflare.com"
 subpath = "order-printer"
 prefix = "apps"
 

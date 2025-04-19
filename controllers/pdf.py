@@ -397,23 +397,12 @@ class PdfReportController(http.Controller):
         """
         Handle case when template is missing or invalid
         Returns:
-            Response: Empty PDF response
+            Response: Empty HTML response
         """
-        # Create empty PDF
-        pdf_content = pdfkit.from_string("", False)
-        
-        # Set headers
-        headers = [
-            ('Content-Type', PDF_CONTENT_TYPE),
-            ('Content-Disposition', 'inline; filename=PDF_demo.pdf'),
-        ]
-        
-        if 'shop_url_pdf' in request.session:
-            headers.append(tuple(self._get_security_headers(request.session['shop_url_pdf']).items())[0])
-        
-        # Return empty PDF
-        return pdf_content
-        
+        html_content = """<!doctype html> <html> <head> </head> <body><div id="u_body" class="u_body"></div></body></html>"""
+        # Return HTML response
+        return html_content
+    
     def _create_error_response(self, exception):
         """
         Handle exceptions during PDF generation
