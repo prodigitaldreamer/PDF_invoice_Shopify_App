@@ -38,7 +38,7 @@ const App: React.FC = () => {
         };
     }, []);
 
-    const handleNavigation = ( newPath: string, params?: Record<string, string>) => {
+    const handleNavigation = (newPath: string, params?: Record<string, string>) => {
         let url = newPath;
         
         // Add query parameters if provided
@@ -47,6 +47,12 @@ const App: React.FC = () => {
             Object.entries(params).forEach(([key, value]) => {
                 urlParams.append(key, value);
             });
+            
+            // Add shop parameter if available
+            if (window.config?.info?.shop && !params.shop) {
+                urlParams.append('shop', window.config.info.shop);
+            }
+            
             url = `${url}?${urlParams.toString()}`;
         }
         

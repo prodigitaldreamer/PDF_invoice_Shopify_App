@@ -113,7 +113,7 @@ class Main(http.Controller):
                     'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
                 })
             template_info = {}
-            if id == 0:
+            if id == '0':
                 value.update({'mode': mode, 'template_info': template_info})
                 template_info.update({
                     'font_family': '',
@@ -123,7 +123,7 @@ class Main(http.Controller):
                     'left_margin': '16.0',
                     'right_margin': '16.0',
                     'page_size': 'a4',
-                    'embed': '/order-printer/invoice/' + str(0) + '/preview/load',
+                    'embed': '/order-printer/invoice/' + str(0) + '/preview/load?shop=' + shop.display_name,
                     'embed_clipboard': '/order-printer/invoice/' + str(0) + '/preview/clipboard',
                 })
                 value.update({'template_info': template_info})
@@ -218,7 +218,7 @@ class Main(http.Controller):
                 'right_margin': params['info']['right_margin'] if 'right_margin' in params['info'] and params['info'][
                     'right_margin'] != '' else '0.0',
                 'default': params['info']['default'] if 'default' in params['info'] else False,
-                'date_format': params['info']['date_format'] if 'date_format' in params['info'] else '%b %d %Y',
+               
             }
             template = None
             if 'id' in params['info']:
@@ -262,6 +262,7 @@ class Main(http.Controller):
                     for tem in shop_model.templates:
                         if tem.id != new_template.id and tem.type == new_template.type:
                             tem.default = False
+            print(record_id)
             return {
                 'status': True,
                 'record': str(record_id),

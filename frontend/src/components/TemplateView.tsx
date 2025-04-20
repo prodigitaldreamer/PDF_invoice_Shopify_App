@@ -106,7 +106,7 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
       
       if (response.data.result.status && response.data.result.template_info) {
         const templateInfo = response.data.result.template_info;
-        
+        console.log('Template info:', templateInfo);
         updateState({
           id: templateId,
           name: templateInfo.name || '',
@@ -190,7 +190,23 @@ const TemplateView: React.FC<TemplateViewProps> = ({ templateId, onOpenEditor, o
       setTimeout(() => {
         if (response.data.result.status) {
           showToast('Template saved successfully');
-          loadTemplateData();
+          
+          // Get the mode from the API response
+          const mode = response.data.result.mode;
+          
+          // If this is a new template creation, redirect to Template Management page
+          if (mode === 'create') {
+            // Get shop from window.config
+            const shopName = window.config?.info?.shop || '';
+            
+            // Redirect to templates page with shop parameter
+            window.location.href = shopName ? 
+              `/order-printer/templates?shop=${shopName}` : 
+              '/order-printer/templates';
+          } else {
+            // If it's just an update, reload the current template data
+            loadTemplateData();
+          }
         } else {
           updateState({ error: 'Failed to save template' }, false);
           showToast('Failed to save template', true);

@@ -425,9 +425,18 @@ const TemplateEdit: React.FC<TemplateEditProps> = ({
               setToastError(false);
               setShowToast(true);
               
-              // Redirect if this was a new template
-              if (!templateId && res.data.result.record) {
-                window.location.pathname = `/order-printer/templates/${res.data.result.record}/design`;
+              // Get the mode from the API response
+              const mode = res.data.result.mode;
+              
+              // If this is a new template creation, redirect to Template Management page
+              if (!templateId || mode === 'create') {
+                // Get shop from window.config
+                const shopName = window.config?.info?.shop || '';
+                
+                // Redirect to templates page with shop parameter
+                window.location.href = shopName ? 
+                  `/order-printer/templates?shop=${shopName}` : 
+                  '/order-printer/templates';
               }
             } else {
               setToastError(true);
