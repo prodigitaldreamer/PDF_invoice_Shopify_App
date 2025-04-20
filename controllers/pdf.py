@@ -320,7 +320,7 @@ class PdfReportController(http.Controller):
         csp = f"frame-ancestors https://{shop_url} https://admin.shopify.com https://{request.httprequest.host};"
         return {'Content-Security-Policy': csp}
     
-    @http.route('/order-printer/invoice/<int:id>/<string:action>/<string:status>', type='http', auth="public", save_session=False)
+    @http.route('/order-printer/invoice/<int:id>/<string:action>/<string:status>', type='http', auth="public", save_session=False, cors="*")
     def generate_invoice_preview(self, id=None, action=None, status=None):
         """
         Generate and serve PDF preview based on template
