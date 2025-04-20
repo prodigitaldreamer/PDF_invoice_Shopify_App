@@ -28,15 +28,21 @@ def shop_login_required(fn):
 
 def is_shop_login(check_access=False, check_force=True):
     is_shop_login = 'shop_url_pdf' in request.session
-    data = json.loads(request.httprequest.data).get('data') if request.httprequest.data else {}
-    if is_shop_login and 'shop' in data:
-        is_shop_login = is_shop_login and data['shop'] == request.session['shop_url_pdf']
+    data = json.loads(request.httprequest.data).get('data', {}) if request.httprequest.data else {}
+
+    shop_in_data = 'shop' in data
+    shop_in_params = 'shop' in request.params
+    if is_shop_login and (shop_in_data or shop_in_params):
+        if shop_in_data:
+            is_shop_login = is_shop_login and data['shop'] == request.session['shop_url_pdf']
+        elif shop_in_params:
+            is_shop_login = is_shop_login and request.params['shop'] == request.session['shop_url_pdf']
     
     if is_shop_login:
         is_shop_login = check_shop_login_from_db(shop_url=request.session['shop_url_pdf'])
     
     force_update_scope = False
-    if is_shop_login and check_access and data.get('shop') == request.session['shop_url_pdf']:
+    if is_shop_login and check_access and (data.get('shop') == request.session['shop_url_pdf'] or request.params.get('shop') == request.session['shop_url_pdf']):
         shop_model = request.env['shopify.pdf.shop'].sudo().search([('name', '=', request.session['shop_url_pdf'])],
                                                                    limit=1)
         token = shop_model.token

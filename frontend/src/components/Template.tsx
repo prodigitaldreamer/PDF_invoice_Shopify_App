@@ -404,7 +404,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
     if (onEditTemplate) {
       onEditTemplate(id);
     } else {
-      window.location.pathname = `/order-printer/templates/${id}/edit/${config?.info?.shop || ''}`;
+      window.location.href = `/order-printer/templates/edit?id=0&shop=${config?.info?.shop || ''}`;
     }
     setActivePopoverId(null);
   };
@@ -642,7 +642,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
       action={{
         content: 'Create new template',
         onAction: () => {
-          window.location.pathname = `/order-printer/templates/0/edit/${config?.info?.shop || ''}`;
+          window.location.href = `/order-printer/templates/edit?id=0&shop=${config?.info?.shop || ''}`;
         }
       }}
       secondaryAction={{
@@ -677,7 +677,7 @@ function TemplateManagement({ onEditTemplate }: TemplateManagementProps) {
               onEditTemplate("0"); // Use "0" to indicate new template
             } else {
               // Only fall back to direct URL navigation if the prop isn't available
-              window.location.pathname = `/order-printer/templates/0/edit/${config?.info?.shop || ''}`;
+              window.location.href = `/order-printer/templates/edit?id=0&shop=${config?.info?.shop || ''}`;
             }
           }
         }}

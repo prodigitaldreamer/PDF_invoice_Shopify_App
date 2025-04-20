@@ -113,7 +113,7 @@ class Main(http.Controller):
                     'shop_url': 'admin.shopify.com/store/' + shop.name.replace(".myshopify.com", ""),
                 })
             template_info = {}
-            if id == 0:
+            if id == '0':
                 value.update({'mode': mode, 'template_info': template_info})
                 template_info.update({
                     'font_family': '',
