@@ -1,10 +1,10 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "b532f4655dbba6b411aa1b704520ed69"
-application_url = "https://changelog-fax-induced-black.trycloudflare.com/shopify/order-printer"
+client_id = "87e74578b5674b3f8a3f100fdc640e93"
+application_url = "https://staging-apps.pullush.com/shopify/order-printer"
 embedded = true
 name = "Order Printer Demo"
-handle = "pdf_demo"
+handle = "order_printer_handle"
 
 [build]
 include_config_on_deploy = true
@@ -14,11 +14,11 @@ api_version = "2025-01"
 
 [auth]
 redirect_urls = [
-  "https://changelog-fax-induced-black.trycloudflare.com/shopify/order-printer/auth"
+  "https://staging-apps.pullush.com/shopify/order-printer/auth"
 ]
 
 [app_proxy]
-url = "https://changelog-fax-induced-black.trycloudflare.com"
+url = "https://staging-apps.pullush.com"
 subpath = "order-printer"
 prefix = "apps"
 
