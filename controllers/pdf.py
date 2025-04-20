@@ -550,7 +550,8 @@ class PdfReportController(http.Controller):
             types = ['invoice', 'refund', 'packing']
             
             # Set security headers
-            headers = self._get_security_headers(request.session['shop_url_pdf'])
+            headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
+                'shop_url_pdf'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
             
             # Process based on action type
             embed = None
@@ -596,15 +597,6 @@ class PdfReportController(http.Controller):
             self.log_shop_error(log=traceback.format_exc(), shop=shop)
             _logger.error(f"Preview error: {str(e)}")
             _logger.error(traceback.format_exc())
-            
-            # Set security headers
-            headers = {}
-            if 'shop_url_pdf' in request.session:
-                headers = {
-                    'Content-Security-Policy': f"frame-ancestors https://{request.session['shop_url_pdf']} https://admin.shopify.com;"
-                }
-                
-            # Render error page
             return request.render('shopify_order_printer.404_not_found', headers=headers)
 
     def _get_order_for_pdf(self, order_id, is_draft_order):
