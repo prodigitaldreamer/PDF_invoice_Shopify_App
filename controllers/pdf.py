@@ -811,7 +811,6 @@ class PdfReportController(http.Controller):
                                                         type=type, isDraftOrder=isDraftOrder)
                 domains = [
                     f"https://{request.session['shop_url_pdf']}", 
-                    "https://staging-apps.pullush.com",
                     "https://admin.shopify.com",
                     f"https://{request.httprequest.host}"
                 ]
