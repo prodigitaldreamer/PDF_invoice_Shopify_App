@@ -551,7 +551,7 @@ class PdfReportController(http.Controller):
             
             # Set security headers
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-                'shop_url_pdf'] +"https://staging-apps.pullush.com"+" https://admin.shopify.com https://" + request.httprequest.host + ";"}
+    'shop_url_pdf'] + " https://staging-apps.pullush.com" + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
             
             # Process based on action type
             embed = None
