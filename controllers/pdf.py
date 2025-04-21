@@ -551,7 +551,7 @@ class PdfReportController(http.Controller):
             
             # Set security headers
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-    'shop_url_pdf'] + " https://staging-apps.pullush.com" + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
+    'shop_url_pdf'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
             
             # Process based on action type
             embed = None
@@ -924,7 +924,7 @@ class PdfReportController(http.Controller):
             params = request.params
             session = self.initialize_shopify_session(shop=params['shop'])
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-    'shop_url_pdf'] + " https://staging-apps.pullush.com" + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
+    'shop_url_pdf'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
             isDraftOrder = 'orderType' in params
             if isDraftOrder:
                 isDraftOrder = isDraftOrder and params['orderType'] == 'bulkDraftOrder'
