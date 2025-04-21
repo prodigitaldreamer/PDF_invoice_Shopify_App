@@ -371,23 +371,23 @@ class PdfReportController(http.Controller):
             html = re.sub(r'(\{\{[^\{\}]*\}\})', '', html)
             
             # Get PDF options
-            options = self._get_pdf_options(template, clipboard, status)
+            # options = self._get_pdf_options(template, clipboard, status)
             
-            # Set environment variable for headless PDF generation
-            os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+            # # Set environment variable for headless PDF generation
+            # os.environ['QT_QPA_PLATFORM'] = 'offscreen'
             
-            # Generate PDF
-            pdf_content = pdfkit.from_string(html, False, options=options, css=PDF_FONTS_CSS_PATH)
+            # # Generate PDF
+            # pdf_content = pdfkit.from_string(html, False, options=options, css=PDF_FONTS_CSS_PATH)
             
-            # Set headers
-            headers = [
-                ('Content-Type', PDF_CONTENT_TYPE),
-                ('Content-Disposition', 'inline; filename=PDF_demo.pdf'),
-            ]
-            headers.append(tuple(self._get_security_headers(request.session['shop_url_pdf']).items())[0])
+            # # Set headers
+            # headers = [
+            #     ('Content-Type', PDF_CONTENT_TYPE),
+            #     ('Content-Disposition', 'inline; filename=PDF_demo.pdf'),
+            # ]
+            # headers.append(tuple(self._get_security_headers(request.session['shop_url_pdf']).items())[0])
             
-            # Create response
-            response = request.make_response(pdf_content, headers=headers)
+            # # Create response
+            # response = request.make_response(pdf_content, headers=headers)
             return html  # Note: For debug purposes, returning HTML instead of PDF
             
         except Exception as e:
@@ -551,7 +551,7 @@ class PdfReportController(http.Controller):
             
             # Set security headers
             headers = {'Content-Security-Policy': "frame-ancestors https://" + request.session[
-                'shop_url_pdf'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"}
+                'shop_url_pdf'] +"https://staging-apps.pullush.com"+" https://admin.shopify.com https://" + request.httprequest.host + ";"}
             
             # Process based on action type
             embed = None

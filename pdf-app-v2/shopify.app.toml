@@ -4,7 +4,7 @@ client_id = "87e74578b5674b3f8a3f100fdc640e93"
 application_url = "https://staging-apps.pullush.com/shopify/order-printer"
 embedded = true
 name = "Order Printer Demo"
-handle = "order_printer_handle"
+handle = "order_printer_demo"
 
 [build]
 include_config_on_deploy = true
