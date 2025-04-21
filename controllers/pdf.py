@@ -908,6 +908,7 @@ class PdfReportController(http.Controller):
             ]
             response = request.make_response(merged_pdf, headers=pdfhttpheaders)
             # response.set_cookie('fileToken', token)
+
             return response
         except Exception as e:
             self.log_shop_error(log=traceback.format_exc())
@@ -986,6 +987,7 @@ class PdfReportController(http.Controller):
             ]
             response = request.make_response(merged_pdf, headers=pdfhttpheaders)
             # response.set_cookie('fileToken', token)
+            _logger.info(f"CSP Header sent: {csp_value}")
             return response
         except Exception as e:
             shop = None
