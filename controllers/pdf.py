@@ -961,7 +961,7 @@ class PdfReportController(http.Controller):
                 ('Content-Length', len(merged_pdf)),
                 ('Content-Disposition', mode + '; filename=' + file_name + '.pdf'),
                 ('Content-Security-Policy', "frame-ancestors https://" + request.session[
-                    'shop_url_pdf'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"),
+                    'shop_url_pdf'] + " https://staging-apps.pullush.com"+ " https://admin.shopify.com https://" + request.httprequest.host + ";"),
             ]
             response = request.make_response(merged_pdf, headers=pdfhttpheaders)
             # response.set_cookie('fileToken', token)
