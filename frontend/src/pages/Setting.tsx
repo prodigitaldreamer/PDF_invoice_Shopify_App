@@ -207,14 +207,6 @@ const SettingsPage: React.FC = () => {
         }));
     }, []);
 
-    // Handle print settings changes
-    const handlePrintSettingChange = useCallback((field: keyof PrintSettings) => (value: string | boolean) => {
-        setPrintSettings(prevState => ({
-            ...prevState,
-            [field]: value,
-        }));
-    }, []);
-
     // Handle notification settings changes
     const handleNotificationSettingChange = useCallback((field: keyof NotificationSettings) => (value: string) => {
         setNotificationSettings(prevState => ({
@@ -484,78 +476,45 @@ const SettingsPage: React.FC = () => {
                                 </div>
                             </Layout.Section>
                             <Layout.Section>
-                                <Card>
-                                    <BlockStack gap="200">
-                                        <Text as="p" variant="bodyMd">
-                                            Printing on Shopify customer order page is <Text as="span" fontWeight="bold">{printSettings.customerOrderPrintEnabled ? 'Enabled' : 'Disabled'}</Text>
-                                        </Text>
-                                        <Box>
-                                            <Button
-                                                onClick={() => handlePrintSettingChange('customerOrderPrintEnabled')(!printSettings.customerOrderPrintEnabled)}
-                                            >
-                                                {printSettings.customerOrderPrintEnabled ? 'Disable' : 'Enable'}
-                                            </Button>
-                                        </Box>
-
-                                        <TextField
-                                            label="Print button label"
-                                            value={printSettings.printButtonLabel}
-                                            onChange={handlePrintSettingChange('printButtonLabel') as (value: string) => void}
-                                            placeholder="Value"
-                                            autoComplete="off"
-                                        />
-                                        <Select
-                                            label="Default print invoice template for customer"
-                                            options={templateOptions}
-                                            value={printSettings.defaultTemplate}
-                                            onChange={handlePrintSettingChange('defaultTemplate') as (value: string) => void}
-                                            placeholder="Select a template"
-                                        />
-                                    </BlockStack>
-                                </Card>
+                                <div ref={emailNotificationRef} id="email-notification-section">
+                                            <Card >
+                                                <Text as="p" variant="bodyMd">
+                                                    Printting on Customer Order List Page
+                                                </Text>
+                                                <Box paddingBlockStart="300">
+                                                    <BlockStack gap="400">
+                                                        <Select
+                                                            label="Default print invoice template for customer"
+                                                            options={templateOptions}
+                                                            value={notificationSettings.defaultEmailTemplate}
+                                                            onChange={handleNotificationSettingChange('defaultEmailTemplate')}
+                                                            placeholder="Select a template"
+                                                        />
+                                                        <TextField
+                                                            label="Download text"
+                                                            value={notificationSettings.downloadText}
+                                                            onChange={handleNotificationSettingChange('downloadText')}
+                                                            placeholder="Value"
+                                                            autoComplete="off"
+                                                        />
+                                                        <TextField
+                                                            id="setting_variables"
+                                                            label="Copy code"
+                                                            value={notificationSettings.code}
+                                                            onChange={handleNotificationSettingChange('code')}
+                                                            autoComplete="off"
+                                                            readOnly
+                                                            labelAction={{
+                                                                content: 'Copy to clipboard',
+                                                                onAction: copyToClipboard
+                                                            }}
+                                                        />
+                                                    </BlockStack>
+                                                </Box>
+                                            </Card>
+                                        </div>
                             </Layout.Section>
 
-                        </Layout>
-                        <Layout>
-                            <Layout.AnnotatedSection>
-                                <div ref={emailNotificationRef} id="email-notification-section">
-                                        <Card >
-                                            <Text as="p" variant="bodyMd">
-                                                Printting on Customer Order List Page
-                                            </Text>
-                                            <Box paddingBlockStart="300">
-                                                <BlockStack gap="400">
-                                                    <Select
-                                                        label="Default print invoice template for customer"
-                                                        options={templateOptions}
-                                                        value={notificationSettings.defaultEmailTemplate}
-                                                        onChange={handleNotificationSettingChange('defaultEmailTemplate')}
-                                                        placeholder="Select a template"
-                                                    />
-                                                    <TextField
-                                                        label="Download text"
-                                                        value={notificationSettings.downloadText}
-                                                        onChange={handleNotificationSettingChange('downloadText')}
-                                                        placeholder="Value"
-                                                        autoComplete="off"
-                                                    />
-                                                    <TextField
-                                                        id="setting_variables"
-                                                        label="Copy code"
-                                                        value={notificationSettings.code}
-                                                        onChange={handleNotificationSettingChange('code')}
-                                                        autoComplete="off"
-                                                        readOnly
-                                                        labelAction={{
-                                                            content: 'Copy to clipboard',
-                                                            onAction: copyToClipboard
-                                                        }}
-                                                    />
-                                                </BlockStack>
-                                            </Box>
-                                        </Card>
-                                    </div>
-                            </Layout.AnnotatedSection>
                         </Layout>
 
                         {/* Invoice Number Settings Card */}
