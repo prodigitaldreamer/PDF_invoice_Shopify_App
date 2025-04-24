@@ -16,7 +16,7 @@ type = "admin_link"
 # url = "https://yourappdomain.com/path"
 [[extensions.targeting]]
 target = "admin.draft-order-details.action.link"
-url = "app://pdf/preview/draftOrder"
+url = "app://order-printer/preview/draftOrder"
 
 # Valid Extension Targets
 #
