@@ -85,17 +85,17 @@
                 <div id="pdf_invoice_preview"></div>
                 <script>
                     window.config = {
-                    "page":'<t t-raw="page"/>',
-                    "info":<t t-raw="info"/>,
-                    "templates":<t t-raw="templates"/>,
-                    "mode":'<t t-raw="mode"/>',
-                    "all_templates":<t t-raw="all_templates"/>,
-                    "template_info":<t t-raw="template_info"/>,
-                    "shop": '<t t-raw="shop_url"/>',
-                    "preview":<t t-raw="preview"/>,
-                    "timeout":<t t-raw="timeout"/>,
-                    "api_key":'<t t-raw="api_key"/>',
-                    "shop_url":'<t t-raw="shop_url"/>',
+                    "page":'<t t-out="page"/>',
+                    "info":<t t-out="info"/>,
+                    "templates":<t t-out="templates"/>,
+                    "mode":'<t t-out="mode"/>',
+                    "all_templates":<t t-out="all_templates"/>,
+                    "template_info":<t t-out="template_info"/>,
+                    "shop": '<t t-out="shop_url"/>',
+                    "preview":<t t-out="preview"/>,
+                    "timeout":<t t-out="timeout"/>,
+                    "api_key":'<t t-out="api_key"/>',
+                    "shop_url":'<t t-out="shop_url"/>',
                     }
                 </script>
                 <t t-call-assets="shopify_order_printer.pdf_js_package_assets"/>

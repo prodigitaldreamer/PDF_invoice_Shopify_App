@@ -1040,7 +1040,7 @@ class Shopify(models.Model):
         return data
 
     def get_invoice_number(self, order):
-        if not self.invoice_start_number or not self.get_current_plan().custom_invoice_number or (
+        if not self.invoice_start_number or (
                 order.attributes.get('financial_status') != 'paid' and order.attributes.get(
                 'financial_status') != 'refunded'):
             return 'N/A'
@@ -1278,8 +1278,8 @@ class Shopify(models.Model):
         soup = BeautifulSoup(html_str, 'html.parser')
         
         # Remove styles content (keep the tags)
-        # for style_tag in soup.find_all('style'):
-        #     style_tag.clear()
+        for style_tag in soup.find_all('style'):
+            style_tag.clear()
         
         # Find all div elements with class 'u-row-container'
         item_divs = []

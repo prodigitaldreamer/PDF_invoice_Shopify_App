@@ -970,23 +970,14 @@ class PdfReportController(http.Controller):
                 return request.render('shopify_order_printer.empty_state', headers=headers)
             merged_pdf = session['shop'].get_pdf(templates=templates, orders=orders, image_data=image_data,
                                                     type=type, isDraftOrder=isDraftOrder)
-            domains = [
-                f"https://{request.session['shop_url_pdf']}", 
-                "https://staging-apps.pullush.com",
-                "https://admin.shopify.com",
-                f"https://{request.httprequest.host}"
-            ]
-            csp_value = f"frame-ancestors {' '.join(domains)};"
-
             pdfhttpheaders = [
                 ('Content-Type', 'application/pdf'),
                 ('Content-Length', len(merged_pdf)),
                 ('Content-Disposition', mode + '; filename=' + file_name + '.pdf'),
-                ('Content-Security-Policy', csp_value),
+                ('Content-Security-Policy', "frame-ancestors https://" + request.session[
+                    'shop_url_pdf'] + " https://admin.shopify.com https://" + request.httprequest.host + ";"),
             ]
             response = request.make_response(merged_pdf, headers=pdfhttpheaders)
-            # response.set_cookie('fileToken', token)
-            _logger.info(f"CSP Header sent: {csp_value}")
             return response
         except Exception as e:
             shop = None
