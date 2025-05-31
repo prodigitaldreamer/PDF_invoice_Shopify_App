@@ -20,3 +20,4 @@
 # Order
  - admin.order-details.action.link -> Action details -> url: app://pdf/preview/order
  - admin.order-index.selection-action.link -> Bulk actions -> url: app:/pdf/preview/bulk 
+ 
