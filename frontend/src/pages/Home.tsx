@@ -8,7 +8,7 @@ import {
   InlineStack,
   BlockStack,
   Box,
-  Layout,
+  Layout,   
   Checkbox,Frame
 } from '@shopify/polaris';
 import { ConfigData, Task } from '../types';
