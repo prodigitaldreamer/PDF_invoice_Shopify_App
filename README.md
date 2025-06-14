@@ -8,7 +8,7 @@
 
   install brew install coreutils for macos
   
-
+  
 -- Create Action
 -- Cd module -> Run shopify app init
 -> Cd tới thư mục app vừa tạo -> run shopify app generate extension --template admin_link --name admin-link-extension (thay đổi key name trước khi generate extension tiếp theo)
